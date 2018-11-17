@@ -33,28 +33,8 @@ class ShaderProgram {
   unifView: WebGLUniformLocation;
   unifProj: WebGLUniformLocation;
   unifColor: WebGLUniformLocation;
-  unifTime: WebGLUniformLocation;
-
   unifWidth: WebGLUniformLocation;
   unifHeight: WebGLUniformLocation;
-
-  unifShadingType: WebGLUniformLocation;
-  unifBgType: WebGLUniformLocation;
-
-  unifOriWeight: WebGLUniformLocation;
-  unifHighLightWeight: WebGLUniformLocation;
-
-  unifGodrayScreenSpaceLightPos: WebGLUniformLocation;
-  unifGodrayDensity: WebGLUniformLocation;
-  unifGodrayWeight: WebGLUniformLocation;
-  unifGodrayDecay: WebGLUniformLocation;
-  unifGodrayExposure: WebGLUniformLocation;
-  unifGodrayNumSamples: WebGLUniformLocation;
-
-  unifCartoonEdgeThickness: WebGLUniformLocation;
-  unifCartoonKuwaharaRadius: WebGLUniformLocation;
-
-  unifDigitalRainSpeed: WebGLUniformLocation;
 
   unifTexUnits: Map<string, WebGLUniformLocation>;
 
@@ -79,27 +59,8 @@ class ShaderProgram {
     this.unifView = gl.getUniformLocation(this.prog, "u_View");
     this.unifProj = gl.getUniformLocation(this.prog, "u_Proj");
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
-    this.unifTime = gl.getUniformLocation(this.prog, "u_Time")
     this.unifHeight = gl.getUniformLocation(this.prog, "u_Height");
     this.unifWidth  = gl.getUniformLocation(this.prog, "u_Width");
-
-    this.unifShadingType = gl.getUniformLocation(this.prog, "u_ShadingType");
-    this.unifBgType = gl.getUniformLocation(this.prog, "u_BgType");
-
-    this.unifOriWeight = gl.getUniformLocation(this.prog, "u_OriginalSceneWeight");
-    this.unifHighLightWeight = gl.getUniformLocation(this.prog, "u_HighLightWeight");
-
-    this.unifGodrayScreenSpaceLightPos = gl.getUniformLocation(this.prog, "u_screenSpaceLightPos");
-    this.unifGodrayDensity = gl.getUniformLocation(this.prog, "u_Density");
-    this.unifGodrayWeight = gl.getUniformLocation(this.prog, "u_Weight");
-    this.unifGodrayDecay = gl.getUniformLocation(this.prog, "u_Decay");
-    this.unifGodrayExposure = gl.getUniformLocation(this.prog, "u_Exposure");
-    this.unifGodrayNumSamples = gl.getUniformLocation(this.prog, "u_NumSamples");
-
-    this.unifCartoonEdgeThickness = gl.getUniformLocation(this.prog, "u_EdgeThickness");
-    this.unifCartoonKuwaharaRadius = gl.getUniformLocation(this.prog, "u_Radius");
-
-    this.unifDigitalRainSpeed = gl.getUniformLocation(this.prog, "u_FallSpeed");
 
     this.unifTexUnits = new Map<string, WebGLUniformLocation>();
   }
@@ -177,13 +138,6 @@ class ShaderProgram {
     }
   }
 
-  setTime(t: number) {
-    this.use();
-    if (this.unifTime !== -1) {
-      gl.uniform1f(this.unifTime, t);
-    }
-  }
-
   setWidth(w: number){
     this.use();
     if(this.unifWidth !== -1){
@@ -195,97 +149,6 @@ class ShaderProgram {
     this.use();
     if(this.unifHeight !== -1){
       gl.uniform1f(this.unifHeight, h);
-    }
-  }
-
-  setShadingType(type: number){
-    this.use();
-    if(this.unifShadingType !== -1){
-      gl.uniform1i(this.unifShadingType, type);
-    }
-  }
-
-  setBackGroundType(type: number){
-    this.use();
-    if(this.unifBgType !== -1){
-      gl.uniform1i(this.unifBgType, type);
-    }
-  }
-
-  setOriginalSceneWeight(w: number){
-    this.use();
-    if(this.unifOriWeight !== -1){
-      gl.uniform1f(this.unifOriWeight, w);
-    }
-  }
-
-  setHighLightWeight(w: number){
-    this.use();
-    if(this.unifHighLightWeight !== -1){
-      gl.uniform1f(this.unifHighLightWeight, w);
-    }
-  }
-
-  setGodRayScreenSpaceLightPos(pos: vec2){
-    this.use();
-    if(this.unifGodrayScreenSpaceLightPos !== -1){
-      gl.uniform2fv(this.unifGodrayScreenSpaceLightPos, pos);
-    }
-  }
-
-  setGodRayDensity(density: number){
-    this.use();
-    if(this.unifGodrayDensity !== -1){
-      gl.uniform1f(this.unifGodrayDensity, density);
-    }
-  }
-
-  setGodRayWeight(weight: number){
-    this.use();
-    if(this.unifGodrayWeight !== -1){
-      gl.uniform1f(this.unifGodrayWeight, weight);
-    }
-  }
-
-  setGodRayDecay(decay: number){
-    this.use();
-    if(this.unifGodrayDecay !== -1){
-      gl.uniform1f(this.unifGodrayDecay, decay);
-    }
-  }
-
-  setGodRayExposure(exposure: number){
-    this.use();
-    if(this.unifGodrayExposure !== -1){
-      gl.uniform1f(this.unifGodrayExposure, exposure);
-    }
-  }
-
-  setGodRaySamples(samples: number){
-    this.use();
-    if(this.unifGodrayNumSamples !== -1){
-      gl.uniform1i(this.unifGodrayNumSamples, samples);
-    }
-  }
-
-  setCartoonEdgeThickness(t: number){
-    this.use();
-    if(this.unifCartoonEdgeThickness !== -1){
-      gl.uniform1f(this.unifCartoonEdgeThickness, t);
-    }
-  }
-
-  setCartoonKuwaharaRadius(r: number){
-    this.use();
-    if(this.unifCartoonKuwaharaRadius !== -1){
-      gl.uniform1f(this.unifCartoonKuwaharaRadius, r);
-    }
-  }
-
-  setDigitalRainFallSpeed(s: number){
-    this.use();
-    if(this.unifDigitalRainSpeed !== -1){
-      gl.uniform1f(this.unifDigitalRainSpeed, s);
     }
   }
 
