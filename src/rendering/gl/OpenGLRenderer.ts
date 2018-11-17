@@ -40,9 +40,9 @@ class OpenGLRenderer {
 
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined];  // 3 gbuffer texture for now
 
-    this.post8Buffers = [undefined, undefined];
+    this.post8Buffers = [undefined, undefined];  // 2 buffers for now
     this.post8Targets = [undefined, undefined];
 
     // set up gBufferPass    
@@ -86,7 +86,6 @@ class OpenGLRenderer {
     this.deferredPass.setHeight(height);
 
     // --- GBUFFER CREATION START ---
-    // refresh the gbuffers
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
@@ -123,7 +122,6 @@ class OpenGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
     // create the framebuffers for post processing
-
     // --------------------------------                          
     // origin buffer and texture from g-buffer
     this.originalBufferFromGBuffer = gl.createFramebuffer()
