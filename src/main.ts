@@ -7,9 +7,10 @@ import Camera from './Camera';
 import {setGL} from './globals';
 import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
-import Texture from './rendering/gl/Texture';
+import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 
+const maxTextureSize : number = 4096;
 
 // Define an object with application parameters and button callbacks
 const controls = {
@@ -20,6 +21,10 @@ const controls = {
 let obj0: string;
 let mesh0: Mesh;
 let tex0: Texture;
+
+let meshes: Mesh[];
+let sceneInfo: TextureBuffer[];
+let triangleCount: number;
 
 var timer = {
   deltaTime: 0.0,
@@ -40,12 +45,63 @@ function loadOBJText() {
 
 
 function loadScene() {
+  meshes = [];
+  triangleCount = 0;
+
   mesh0 && mesh0.destroy();
 
   mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, 0));
   mesh0.create();
 
   tex0 = new Texture('resources/textures/wahoo.bmp');
+
+  meshes.push(mesh0);
+  triangleCount = triangleCount + mesh0.count / 3;
+
+  console.log("triangle count = " + triangleCount);
+
+  // create texture for scene information
+  sceneInfo = [];
+  let maxTriangleCountPerTexture = maxTextureSize * Math.floor(maxTextureSize / 6);
+  let sceneTexCount = Math.ceil(triangleCount / maxTriangleCountPerTexture);
+  for(let i = 0; i < sceneTexCount; i++) {
+    if(i == sceneTexCount - 1) {
+      sceneInfo.push(new TextureBuffer(triangleCount - maxTriangleCountPerTexture * i, 2, maxTextureSize));
+    }
+    else {
+      sceneInfo.push(new TextureBuffer(maxTriangleCountPerTexture, 2, maxTextureSize));
+    }
+  }
+
+  // store position and normal info into texture
+  let currentCount = 0;
+  for(let i = 0; i < meshes.length; i++) {
+    for(let j = 0; j < meshes[i].count / 3; j++) {
+      let vertexIdx = [meshes[i].indices[j * 3], meshes[i].indices[j * 3 + 1], meshes[i].indices[j * 3 + 2]];
+      let textureIdx = Math.floor((currentCount + j) / maxTriangleCountPerTexture);
+      let localTriangleIdx = currentCount + j - textureIdx * maxTriangleCountPerTexture;
+
+      for(let k = 0; k < 3; k++) {
+        // position
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 0)] = meshes[i].positions[3 * vertexIdx[k]];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 1)] = meshes[i].positions[3 * vertexIdx[k] + 1];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 2)] = meshes[i].positions[3 * vertexIdx[k] + 2];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 3)] = 1.0;
+
+        // normal
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 0)] = meshes[i].normals[3 * vertexIdx[k]];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 1)] = meshes[i].normals[3 * vertexIdx[k] + 1];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 2)] = meshes[i].normals[3 * vertexIdx[k] + 2];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 3)] = 0.0;
+      }
+
+    }
+    currentCount = currentCount + meshes[i].count / 3;
+  }
+
+  for(let i = 0; i < sceneInfo.length; i++) {
+    sceneInfo[i].update();
+  }
 }
 
 
@@ -109,11 +165,10 @@ function main() {
     renderer.clear();
     renderer.clearGB();
 
-    // forward render mesh info into gbuffers
-    renderer.renderToGBuffer(camera, [mesh0], tex0);      
-    // render from gbuffers into 32-bit color buffer
-    renderer.renderFromGBuffer(camera);
-    // apply 32-bit post and tonemap from 32-bit color to 8-bit color
+    //renderer.renderToGBuffer(camera, [mesh0], tex0);      
+    //renderer.renderFromGBuffer(camera);
+    renderer.rayCast(camera);
+
   
     stats.end();
     requestAnimationFrame(tick);

@@ -19,6 +19,8 @@ class Camera {
       eye: position,
       center: target,
     });
+    this.position = position;
+    this.target = target;
     this.controls.mode = 'turntable';
     vec3.add(this.target, this.position, this.direction);
     mat4.lookAt(this.viewMatrix, this.controls.eye, this.controls.center, this.controls.up);
