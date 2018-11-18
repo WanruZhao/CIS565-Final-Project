@@ -24,7 +24,7 @@ let wahooTextures: Map<string, Texture>;
 let tableTextures: Map<string, Texture>;
 let cubeTextures: Map<string, Texture>;
 let sphereTextures: Map<string, Texture>;
-let wallTextures: Map<string, Texture>;
+let envTextures: Map<string, Texture>;
 
 
 let cubeMesh: Mesh;
@@ -92,10 +92,10 @@ function loadScene() {
   let sphereAlbedoTex = new Texture('resources/textures/wahoo.bmp');
   sphereTextures.set('tex_Albedo', sphereAlbedoTex);
 
-  // load cube textures
-  wallTextures = new Map<string, Texture>();
-  let wallAlbedoTex = new Texture('resources/textures/wall.jpg');
-  wallTextures.set('tex_Albedo', wallAlbedoTex);
+  // load environment textures
+  envTextures = new Map<string, Texture>();
+  let envAlbedoTex = new Texture('resources/textures/environment.jpg');
+  envTextures.set('tex_Albedo', envAlbedoTex);
 }
 
 
@@ -176,13 +176,18 @@ function main() {
     renderer.renderToGBuffer(camera, [cubeMesh], cubeTextures, modelMatrix);     
 
     // render wall
-    mat4.fromScaling(modelMatrix, vec3.fromValues(50, 20, 50));
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.7, 0));
-    renderer.renderToGBuffer(camera, [cubeMesh], wallTextures, modelMatrix);     
+    // mat4.fromScaling(modelMatrix, vec3.fromValues(50, 20, 50));
+    // mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.7, 0));
+    // renderer.renderToGBuffer(camera, [cubeMesh], wallTextures, modelMatrix);   
+
+    mat4.fromScaling(modelMatrix, vec3.fromValues(7, 7, 7));
+    mat4.rotateX(modelMatrix, modelMatrix, -90);
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.1, 0));   
+    renderer.renderToGBuffer(camera, [sphereMesh], envTextures, modelMatrix); 
 
     // render sphere
-    mat4.fromScaling(modelMatrix, vec3.fromValues(4, 4, 4));
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0.0, 3.0, 0.0));
+    mat4.fromScaling(modelMatrix, vec3.fromValues(0.5, 0.5, 0.5));
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(-10, 21, 5));
     renderer.renderToGBuffer(camera, [sphereMesh], cubeTextures, modelMatrix);
 
     // ==============render from gbuffers into 32-bit color buffer=============
