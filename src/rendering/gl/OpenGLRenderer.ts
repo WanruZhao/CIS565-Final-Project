@@ -51,7 +51,7 @@ class OpenGLRenderer {
     // set up gBufferPass    
     this.gBufferPass = new GBufferPass(require('../../shaders/standard-vert.glsl'), 
                                       require('../../shaders/standard-frag.glsl'));
-    this.gBufferPass.setupTexUnits(["tex_Color"]);
+    // this.gBufferPass.setupTexUnits(["tex_Color"]);
 
     // set up deferredPass
     this.deferredPass = new DeferredPass(require('../../shaders/screenspace-vert.glsl'), 
@@ -229,9 +229,36 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, tex:Texture) {    
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    this.gBufferPass.drawElements(camera, drawables, tex);
+  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, textures: Map<string, Texture>, modelMatrix: mat4) {    
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);   
+
+    // setup textures 
+    let i = 0;
+    for (let [name, tex] of textures) {
+      this.gBufferPass.setupTexUnits([name]);
+      this.gBufferPass.bindTexToUnit(name, tex, i);
+      i++;
+    }
+
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+		gl.enable(gl.DEPTH_TEST);
+  
+    // setup matrices
+    let model = mat4.clone(modelMatrix);
+		let viewProj = mat4.create();
+		let view = camera.viewMatrix;
+		let proj = camera.projectionMatrix;
+		let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
+	
+		mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+		this.gBufferPass.setModelMatrix(model);
+		this.gBufferPass.setViewProjMatrix(viewProj);
+		this.gBufferPass.setGeometryColor(color);
+		this.gBufferPass.setViewMatrix(view);
+		this.gBufferPass.setProjMatrix(proj);
+
+    this.gBufferPass.drawElements(camera, drawables);
+
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 

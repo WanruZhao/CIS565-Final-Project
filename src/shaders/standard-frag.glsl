@@ -15,7 +15,7 @@ out vec4 fragColor[3]; // The data in the ith index of this array of outputs
                        // such as albedo, normal, and position, as
                        // separate images from a single render pass.
 
-uniform sampler2D tex_Color;
+uniform sampler2D tex_Albedo;
 
 
 void main() {
@@ -23,7 +23,8 @@ void main() {
     // Presently, the provided shader passes "nothing" to the first
     // two gbuffers and basic color to the third.
 
-    vec3 col = texture(tex_Color, fs_UV).rgb;
+    vec3 col = texture(tex_Albedo, fs_UV).rgb;
+
 
     // if using textures, inverse gamma correct
     col = pow(col, vec3(2.2));

@@ -1,4 +1,4 @@
-import {vec3, vec4} from 'gl-matrix';
+import {vec3, vec4, mat4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Mesh from './geometry/Mesh';
@@ -9,6 +9,7 @@ import {readTextFile} from './globals';
 import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
+import Icosphere from './geometry/Icosphere';
 
 const maxTextureSize : number = 4096;
 
@@ -18,9 +19,19 @@ const controls = {
   PostProcessingType: 'Deferred',
 };
 
-let obj0: string;
-let mesh0: Mesh;
-let tex0: Texture;
+let objString: string;
+let tex: Texture;
+let wahooTextures: Map<string, Texture>;
+let tableTextures: Map<string, Texture>;
+let cubeTextures: Map<string, Texture>;
+let sphereTextures: Map<string, Texture>;
+let envTextures: Map<string, Texture>;
+
+
+let cubeMesh: Mesh;
+let wahooMesh: Mesh;
+let sphereMesh: Mesh;
+
 
 let meshes: Mesh[];
 let sceneInfo: TextureBuffer[];
@@ -39,24 +50,74 @@ var timer = {
 }
 
 
-function loadOBJText() {
-  obj0 = readTextFile('resources/obj/wahoo.obj');
+function loadOBJText(path: string): string {
+  return readTextFile(path);
+  
 }
 
 
 function loadScene() {
+
   meshes = [];
   triangleCount = 0;
 
-  mesh0 && mesh0.destroy();
+  // Set up scene
+  wahooMesh && wahooMesh.destroy();
+  cubeMesh && cubeMesh.destroy();
+  sphereMesh && sphereMesh.destroy();
 
-  mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, 0));
-  mesh0.create();
+  // load wahoo mesh
+  objString = loadOBJText('resources/obj/wahoo.obj');
+  wahooMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  wahooMesh.create();
 
-  tex0 = new Texture('resources/textures/wahoo.bmp');
+  meshes.push(wahooMesh);
+  triangleCount = triangleCount + wahooMesh.count / 3;
 
-  meshes.push(mesh0);
-  triangleCount = triangleCount + mesh0.count / 3;
+  // load cube mesh
+  objString = loadOBJText('resources/obj/cube.obj');
+  cubeMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  cubeMesh.create();
+
+  meshes.push(cubeMesh);
+  triangleCount = triangleCount + cubeMesh.count / 3;
+
+  // loade sphere mesh
+  objString = loadOBJText('resources/obj/sphere.obj');
+  sphereMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  sphereMesh.create();
+
+  meshes.push(sphereMesh);
+  triangleCount = triangleCount + sphereMesh.count / 3;
+
+
+  // load wahoo textures
+  wahooTextures = new Map<string, Texture>();
+  let wahooAlbedoTex = new Texture('resources/textures/wahoo.bmp');
+  wahooTextures.set('tex_Albedo', wahooAlbedoTex);
+
+  // load table textures
+  tableTextures = new Map<string, Texture>();
+  let tableAlbedoTex = new Texture('resources/textures/marble.jpg');
+  tableTextures.set('tex_Albedo', tableAlbedoTex);
+
+  // load cube textures
+  cubeTextures = new Map<string, Texture>();
+  let cubeAlbedoTex = new Texture('resources/textures/ice.jpg');
+  cubeTextures.set('tex_Albedo', cubeAlbedoTex);
+
+  // load sphere textures
+  sphereTextures = new Map<string, Texture>();
+  let sphereAlbedoTex = new Texture('resources/textures/wahoo.bmp');
+  sphereTextures.set('tex_Albedo', sphereAlbedoTex);
+
+  // load environment textures
+  envTextures = new Map<string, Texture>();
+  let envAlbedoTex = new Texture('resources/textures/environment.jpg');
+  envTextures.set('tex_Albedo', envAlbedoTex);
+
+
+
 
   console.log("triangle count = " + triangleCount);
 
@@ -102,6 +163,7 @@ function loadScene() {
   for(let i = 0; i < sceneInfo.length; i++) {
     sceneInfo[i].update();
   }
+
 }
 
 
@@ -165,9 +227,40 @@ function main() {
     renderer.clear();
     renderer.clearGB();
 
-    //renderer.renderToGBuffer(camera, [mesh0], tex0);      
-    //renderer.renderFromGBuffer(camera);
-    renderer.rayCast(camera);
+    // ==============forward render mesh info into gbuffers================
+    let modelMatrix = mat4.create();
+    // render table
+    mat4.fromScaling(modelMatrix, vec3.fromValues(20, 3, 20));
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0.0, 2.0, 0.0));
+    renderer.renderToGBuffer(camera, [cubeMesh], tableTextures, modelMatrix);  
+
+    // render cube
+    mat4.fromScaling(modelMatrix, vec3.fromValues(3, 3, 3));
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0.0, 3.0, 0.0));
+    renderer.renderToGBuffer(camera, [cubeMesh], cubeTextures, modelMatrix);
+    
+    mat4.fromScaling(modelMatrix, vec3.fromValues(4, 6, 4));
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(1.5, 1.7, 1.5));
+    renderer.renderToGBuffer(camera, [cubeMesh], cubeTextures, modelMatrix);     
+
+    // render wall
+    // mat4.fromScaling(modelMatrix, vec3.fromValues(50, 20, 50));
+    // mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.7, 0));
+    // renderer.renderToGBuffer(camera, [cubeMesh], wallTextures, modelMatrix);   
+
+    mat4.fromScaling(modelMatrix, vec3.fromValues(7, 7, 7));
+    mat4.rotateX(modelMatrix, modelMatrix, -90);
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.1, 0));   
+    renderer.renderToGBuffer(camera, [sphereMesh], envTextures, modelMatrix); 
+
+    // render sphere
+    mat4.fromScaling(modelMatrix, vec3.fromValues(0.5, 0.5, 0.5));
+    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(-10, 21, 5));
+    renderer.renderToGBuffer(camera, [sphereMesh], cubeTextures, modelMatrix);
+
+    // ==============render from gbuffers into 32-bit color buffer=============
+    renderer.renderFromGBuffer(camera);
+    // apply 32-bit post and tonemap from 32-bit color to 8-bit color
 
   
     stats.end();
@@ -191,7 +284,6 @@ function main() {
 
 function setup() {
   timer.startTime = Date.now();
-  loadOBJText();
   main();
 }
 
