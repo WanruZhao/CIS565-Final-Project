@@ -10,6 +10,7 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
+import { Scene } from './scene/scene';
 
 const maxTextureSize : number = 4096;
 
@@ -31,6 +32,8 @@ let envTextures: Map<string, Texture>;
 let cubeMesh: Mesh;
 let wahooMesh: Mesh;
 let sphereMesh: Mesh;
+
+let scene: Scene;
 
 
 let meshes: Mesh[];
@@ -61,68 +64,45 @@ function loadScene() {
   meshes = [];
   triangleCount = 0;
 
-  // Set up scene
-  wahooMesh && wahooMesh.destroy();
-  cubeMesh && cubeMesh.destroy();
-  sphereMesh && sphereMesh.destroy();
+  scene && scene.destroy();
+  scene = new Scene();
 
-  // load wahoo mesh
-  objString = loadOBJText('resources/obj/wahoo.obj');
-  wahooMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  wahooMesh.create();
+  let objString;
+  let mesh;
+  let textureSet;
+  let texture;
 
-  // load cube mesh
+  // load cube mesh 
   objString = loadOBJText('resources/obj/cube.obj');
-  cubeMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  cubeMesh.create();
+  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  mesh.create();
+  scene.addMesh('cube', mesh);
 
-  // loade sphere mesh
-  objString = loadOBJText('resources/obj/sphere.obj');
-  sphereMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  sphereMesh.create();
+  // load table mesh 
+  objString = loadOBJText('resources/obj/table.obj');
+  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  mesh.create();
+  scene.addMesh('table', mesh);
 
+  // load table texture
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/marble.jpg');
+  textureSet.set('tex_Albedo', texture);
+  scene.addTextureSet('table', textureSet);
 
-  // load wahoo textures
-  wahooTextures = new Map<string, Texture>();
-  let wahooAlbedoTex = new Texture('resources/textures/wahoo.bmp');
-  wahooTextures.set('tex_Albedo', wahooAlbedoTex);
-
-  // load table textures
-  tableTextures = new Map<string, Texture>();
-  let tableAlbedoTex = new Texture('resources/textures/marble.jpg');
-  tableTextures.set('tex_Albedo', tableAlbedoTex);
-
-  // load cube textures
-  cubeTextures = new Map<string, Texture>();
-  let cubeAlbedoTex = new Texture('resources/textures/ice.jpg');
-  cubeTextures.set('tex_Albedo', cubeAlbedoTex);
-
-  // load sphere textures
-  sphereTextures = new Map<string, Texture>();
-  let sphereAlbedoTex = new Texture('resources/textures/wahoo.bmp');
-  sphereTextures.set('tex_Albedo', sphereAlbedoTex);
-
-  // load environment textures
-  envTextures = new Map<string, Texture>();
-  let envAlbedoTex = new Texture('resources/textures/environment.jpg');
-  envTextures.set('tex_Albedo', envAlbedoTex);
+  // load ice texture
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/ice.jpg');
+  textureSet.set('tex_Albedo', texture);
+  scene.addTextureSet('ice', textureSet);
 
 
   // true scene meshes load, needed to be changed if scene changes
-  meshes.push(cubeMesh);
-  triangleCount = triangleCount + cubeMesh.count / 3;
+  meshes.push(scene.getMesh("table"));
+  triangleCount = triangleCount + scene.getMesh("table").count / 3;
 
-  meshes.push(cubeMesh);
-  triangleCount = triangleCount + cubeMesh.count / 3;
-
-  meshes.push(cubeMesh);
-  triangleCount = triangleCount + cubeMesh.count / 3;
-
-  meshes.push(sphereMesh);
-  triangleCount = triangleCount + sphereMesh.count / 3;
-
-  meshes.push(sphereMesh);
-  triangleCount = triangleCount + sphereMesh.count / 3;
+  meshes.push(scene.getMesh("cube"));
+  triangleCount = triangleCount + scene.getMesh("cube").count / 3;
 
 
   console.log("triangle count = " + triangleCount);
@@ -201,7 +181,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 9, 25), vec3.fromValues(0, 9, 0));
+  const camera = new Camera(vec3.fromValues(0, 2, 10), vec3.fromValues(0, 2, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0, 0, 0, 1);
@@ -241,40 +221,21 @@ function main() {
 
     // ==============forward render mesh info into gbuffers================
     let modelMatrix = mat4.create();
-    // render table
-    mat4.fromScaling(modelMatrix, vec3.fromValues(20, 3, 20));
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0.0, 2.0, 0.0));
-    renderer.renderToGBuffer(camera, [cubeMesh], tableTextures, modelMatrix);  
+    mat4.identity(modelMatrix);
+  
+     // render table
+     renderer.renderToGBuffer(camera, [scene.getMesh('table')], scene.getTextureSet('table'));  
+ 
+     // render cube
+     renderer.renderToGBuffer(camera, [scene.getMesh('cube')], scene.getTextureSet('ice'));
+ 
 
-    // render cube
-    mat4.fromScaling(modelMatrix, vec3.fromValues(3, 3, 3));
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0.0, 3.0, 0.0));
-    renderer.renderToGBuffer(camera, [cubeMesh], cubeTextures, modelMatrix);
-    
-    mat4.fromScaling(modelMatrix, vec3.fromValues(4, 6, 4));
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(1.5, 1.7, 1.5));
-    renderer.renderToGBuffer(camera, [cubeMesh], cubeTextures, modelMatrix);     
-
-    // render wall
-    // mat4.fromScaling(modelMatrix, vec3.fromValues(50, 20, 50));
-    // mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.7, 0));
-    // renderer.renderToGBuffer(camera, [cubeMesh], wallTextures, modelMatrix);   
-
-    mat4.fromScaling(modelMatrix, vec3.fromValues(7, 7, 7));
-    mat4.rotateX(modelMatrix, modelMatrix, -90);
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(0, 0.1, 0));   
-    renderer.renderToGBuffer(camera, [sphereMesh], envTextures, modelMatrix); 
-
-    // render sphere
-    mat4.fromScaling(modelMatrix, vec3.fromValues(0.5, 0.5, 0.5));
-    mat4.translate(modelMatrix, modelMatrix, vec3.fromValues(-10, 21, 5));
-    renderer.renderToGBuffer(camera, [sphereMesh], cubeTextures, modelMatrix);
 
     // ==============render from gbuffers into 32-bit color buffer=============
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
 
-    renderer.shadowStage(camera, sceneInfo, triangleCount);
+    //renderer.shadowStage(camera, sceneInfo, triangleCount);
 
   
     stats.end();

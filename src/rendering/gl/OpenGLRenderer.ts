@@ -266,7 +266,7 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, textures: Map<string, Texture>, modelMatrix: mat4) {    
+  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, textures: Map<string, Texture>) {    
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);   
 
     // setup textures 
@@ -281,7 +281,8 @@ class OpenGLRenderer {
 		gl.enable(gl.DEPTH_TEST);
   
     // setup matrices
-    let model = mat4.clone(modelMatrix);
+    let model = mat4.create();
+    mat4.identity(model);    
 		let viewProj = mat4.create();
 		let view = camera.viewMatrix;
 		let proj = camera.projectionMatrix;
