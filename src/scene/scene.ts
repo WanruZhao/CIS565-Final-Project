@@ -1,7 +1,9 @@
 import { vec3, vec4 } from 'gl-matrix';
 import Mesh from '../geometry/Mesh';
-import { Texture } from '../rendering/gl/Texture';
+import { Texture, TextureBuffer } from '../rendering/gl/Texture';
 import { KDTreeNode, buildKDTree } from './BVH';
+
+const maxTextureSize : number = 4096;
 
 export class AABB {
     min: vec3
@@ -104,44 +106,84 @@ export class Primitive {
 
 export class Scene {
     primitives: Array<Primitive>
-    meshes: Map<string, Mesh>
-    textureSets: Map<string, Map<string, Texture>>
+    // meshes: Map<string, Mesh>
+    // textureSets: Map<string, Map<string, Texture>>
+    meshes: Mesh[]
+    textureSets: Array<Map<string, Texture>>
     kdTreeRoot: KDTreeNode
+    sceneInfoTextures: TextureBuffer[]
+    triangleCount: number
 
     constructor() {
         this.primitives = new Array<Primitive>();
-        this.meshes = new Map<string, Mesh>();
-        this.textureSets = new Map<string, Map<string, Texture>>();
+        this.meshes = []
+        this.textureSets = new Array<Map<string, Texture>>();
         this.kdTreeRoot = null;
+        this.sceneInfoTextures = [];
+        this.triangleCount = 0;
     }
 
-    addMesh(name: string, mesh: Mesh) {
-        this.meshes.set(name, mesh);
+    addSceneElement(mesh: Mesh, textureSet: Map<string, Texture>) {
+        this.meshes.push(mesh);
+        this.textureSets.push(textureSet);
 
         let count = this.primitives.length;
         mesh.primitives.forEach(primitive => {
             primitive.id = count++;
             this.primitives.push(primitive);
         });
+
+        this.triangleCount += (mesh.count / 3);
     }
 
-    addTextureSet(name: string, textureSet: Map<string, Texture>) {
-        this.textureSets.set(name, textureSet);
-    }
+    buildSceneInfoTextures() {
+        let maxTriangleCountPerTexture = maxTextureSize * Math.floor(maxTextureSize / 6);
+        let sceneTexCount = Math.ceil(this.triangleCount / maxTriangleCountPerTexture);
+        for(let i = 0; i < sceneTexCount; i++) {
+          if(i == sceneTexCount - 1) {
+            this.sceneInfoTextures.push(new TextureBuffer(this.triangleCount - maxTriangleCountPerTexture * i, 2, maxTextureSize));
+          }
+          else {
+            this.sceneInfoTextures.push(new TextureBuffer(maxTriangleCountPerTexture, 2, maxTextureSize));
+          }
+        }
 
-    getMesh(name: string): Mesh {
-        return this.meshes.get(name);
-    }
+        let currentCount = 0;
+        for(let i = 0; i < this.meshes.length; i++) {
+            for(let j = 0; j < this.meshes[i].count / 3; j++) {
+            let vertexIdx = [this.meshes[i].indices[j * 3], this.meshes[i].indices[j * 3 + 1], this.meshes[i].indices[j * 3 + 2]];
+            let textureIdx = Math.floor((currentCount + j) / maxTriangleCountPerTexture);
+            let localTriangleIdx = currentCount + j - textureIdx * maxTriangleCountPerTexture;
 
-    getTextureSet(name: string): Map<string, Texture> {
-        return this.textureSets.get(name);
+            for(let k = 0; k < 3; k++) {
+                // position
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 0, k, 0)] = this.meshes[i].positions[4 * vertexIdx[k]];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 0, k, 1)] = this.meshes[i].positions[4 * vertexIdx[k] + 1];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 0, k, 2)] = this.meshes[i].positions[4 * vertexIdx[k] + 2];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 0, k, 3)] = 1.0;
+
+                // normal
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 1, k, 0)] = this.meshes[i].normals[4 * vertexIdx[k]];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 1, k, 1)] = this.meshes[i].normals[4 * vertexIdx[k] + 1];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 1, k, 2)] = this.meshes[i].normals[4 * vertexIdx[k] + 2];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, 1, k, 3)] = 0.0;
+            }
+
+            }
+            currentCount = currentCount + this.meshes[i].count / 3;
+        }
+
+        for(let i = 0; i < this.sceneInfoTextures.length; i++) {
+            this.sceneInfoTextures[i].update();
+        }
+
     }
 
     destroy() {
         for (let mesh of this.meshes.values()) {
             mesh.destroy();
         }
-        this.meshes.clear();
+        this.meshes = null
     }
 
 }

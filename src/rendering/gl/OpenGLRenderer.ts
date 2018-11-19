@@ -238,16 +238,8 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, textures: Map<string, Texture>) {    
+  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, textureSets: Array<Map<string, Texture>>) {    
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);   
-
-    // setup textures 
-    let i = 0;
-    for (let [name, tex] of textures) {
-      this.gBufferPass.setupTexUnits([name]);
-      this.gBufferPass.bindTexToUnit(name, tex, i);
-      i++;
-    }
 
     gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 		gl.enable(gl.DEPTH_TEST);
@@ -258,16 +250,28 @@ class OpenGLRenderer {
 		let viewProj = mat4.create();
 		let view = camera.viewMatrix;
 		let proj = camera.projectionMatrix;
-		let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
-	
-		mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
+    let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
+    
+    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
 		this.gBufferPass.setModelMatrix(model);
 		this.gBufferPass.setViewProjMatrix(viewProj);
 		this.gBufferPass.setGeometryColor(color);
 		this.gBufferPass.setViewMatrix(view);
 		this.gBufferPass.setProjMatrix(proj);
 
-    this.gBufferPass.drawElements(camera, drawables);
+
+    for (let i = 0; i < drawables.length; ++i) {
+      // setup textures 
+      let textureSet = textureSets[i];
+      let j = 0;
+      for (let [name, tex] of textureSet) {
+        this.gBufferPass.setupTexUnits([name]);
+        this.gBufferPass.bindTexToUnit(name, tex, j);
+        j++;
+      }
+
+      this.gBufferPass.drawElements(camera, [drawables[i]]);
+    }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }

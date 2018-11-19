@@ -12,6 +12,7 @@ import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import { Scene } from './scene/scene';
 import { buildKDTree } from './scene/BVH';
+import { WSAENETDOWN } from 'constants';
 
 const maxTextureSize : number = 4096;
 
@@ -59,117 +60,39 @@ function loadScene() {
   let textureSet;
   let texture;
 
-  // load table mesh 
+
+  // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
   mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   mesh.create();
-  scene.addMesh('table', mesh);
 
-  // load wall mesh 
-  objString = loadOBJText('resources/obj/wall.obj');
-  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  mesh.create();
-  scene.addMesh('wall', mesh);
-
-  // load models mesh 
-  objString = loadOBJText('resources/obj/models.obj');
-  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  mesh.create();
-  scene.addMesh('models', mesh);
-
-  // load marble texture
   textureSet = new Map<string, Texture>();
   texture = new Texture('resources/textures/marble.jpg');
   textureSet.set('tex_Albedo', texture);
-  scene.addTextureSet('marble', textureSet);
+  scene.addSceneElement(mesh, textureSet);
 
-  // load ice texture
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/ice.jpg');
-  textureSet.set('tex_Albedo', texture);
-  scene.addTextureSet('ice', textureSet);
+  // load wall mesh && textures
+  objString = loadOBJText('resources/obj/wall.obj');
+  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  mesh.create();
 
-  // load ice texture
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/paper.jpg');
-  textureSet.set('tex_Albedo', texture);
-  scene.addTextureSet('paper', textureSet);
-
-  // load wall texture
   textureSet = new Map<string, Texture>();
   texture = new Texture('resources/textures/wall.jpg');
   textureSet.set('tex_Albedo', texture);
-  scene.addTextureSet('wall', textureSet);
+  scene.addSceneElement(mesh, textureSet);
+
+  // load models mesh & textures
+  objString = loadOBJText('resources/obj/models.obj');
+  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  mesh.create();
+
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/ice.jpg');
+  textureSet.set('tex_Albedo', texture);
+  scene.addSceneElement(mesh, textureSet);
 
 
-  // true scene meshes load, needed to be changed if scene changes
-  // meshes.push(scene.getMesh("table"));
-  // triangleCount = triangleCount + scene.getMesh("table").count / 3;
-
-  // console.log(scene.getMesh("cube").count);
-  // console.log(scene.getMesh("cube").positions.length);
-  // console.log(scene.getMesh("cube").normals.length);
-
-  meshes.push(scene.getMesh("table"));
-  triangleCount = triangleCount + scene.getMesh("table").count / 3;
-
-  meshes.push(scene.getMesh("wall"));
-  triangleCount = triangleCount + scene.getMesh("wall").count / 3;
-
-  meshes.push(scene.getMesh("models"));
-  triangleCount = triangleCount + scene.getMesh("models").count / 3;
-
-
-  console.log("triangle count = " + triangleCount);
-
-  // create texture for scene information
-  sceneInfo = [];
-  let maxTriangleCountPerTexture = maxTextureSize * Math.floor(maxTextureSize / 6);
-  let sceneTexCount = Math.ceil(triangleCount / maxTriangleCountPerTexture);
-  for(let i = 0; i < sceneTexCount; i++) {
-    if(i == sceneTexCount - 1) {
-      sceneInfo.push(new TextureBuffer(triangleCount - maxTriangleCountPerTexture * i, 2, maxTextureSize));
-    }
-    else {
-      sceneInfo.push(new TextureBuffer(maxTriangleCountPerTexture, 2, maxTextureSize));
-    }
-  }
-
-  console.log("max triangle count per texture = " + maxTriangleCountPerTexture);
-  console.log("actual number of textures used = " + sceneTexCount);
-
-  // store position and normal info into texture
-  /* What is store in this texture should be optimized later
-    Such as for a triangle, just store p0, e1(p1 - p0), e2(p2 - p0) and n(e1 X e2)
-  */
-  let currentCount = 0;
-  for(let i = 0; i < meshes.length; i++) {
-    for(let j = 0; j < meshes[i].count / 3; j++) {
-      let vertexIdx = [meshes[i].indices[j * 3], meshes[i].indices[j * 3 + 1], meshes[i].indices[j * 3 + 2]];
-      let textureIdx = Math.floor((currentCount + j) / maxTriangleCountPerTexture);
-      let localTriangleIdx = currentCount + j - textureIdx * maxTriangleCountPerTexture;
-
-      for(let k = 0; k < 3; k++) {
-        // position
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 0)] = meshes[i].positions[4 * vertexIdx[k]];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 1)] = meshes[i].positions[4 * vertexIdx[k] + 1];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 2)] = meshes[i].positions[4 * vertexIdx[k] + 2];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 3)] = 1.0;
-
-        // normal
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 0)] = meshes[i].normals[4 * vertexIdx[k]];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 1)] = meshes[i].normals[4 * vertexIdx[k] + 1];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 2)] = meshes[i].normals[4 * vertexIdx[k] + 2];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 3)] = 0.0;
-      }
-
-    }
-    currentCount = currentCount + meshes[i].count / 3;
-  }
-
-  for(let i = 0; i < sceneInfo.length; i++) {
-    sceneInfo[i].update();
-  }
+  scene.buildSceneInfoTextures();
 
   // build KDTree
   // scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
@@ -239,14 +162,11 @@ function main() {
 
     // ==============forward render mesh info into gbuffers================
     // render demo scene
-    renderer.renderToGBuffer(camera, [scene.getMesh('table')], scene.getTextureSet('marble'));  
-    renderer.renderToGBuffer(camera, [scene.getMesh('wall')], scene.getTextureSet('wall'));  
-    renderer.renderToGBuffer(camera, [scene.getMesh('models')], scene.getTextureSet('ice'));  
-    
+    renderer.renderToGBuffer(camera, scene.meshes, scene.textureSets);  
 
     renderer.renderFromGBuffer(camera);
 
-    renderer.shadowStage(camera, sceneInfo, triangleCount);
+    renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
 
   
     stats.end();
