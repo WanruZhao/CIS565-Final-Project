@@ -1,9 +1,10 @@
 import { Primitive, AABB } from './scene';
 
-const MIN_PRIMITIVES_IN_NODE = 4;
+const MAX_PRIMITIVES_IN_NODE = 8;
 const MIN_AABB_LENGTH = 0.001;
 
-class KDTreeNode {
+export class KDTreeNode {
+    id: number
     aabb: AABB
     left: KDTreeNode
     right: KDTreeNode
@@ -19,8 +20,6 @@ class KDTreeNode {
         this.axis = 0;
 
     }
-
-
 }
 
 export function buildKDTree(primitives: Array<Primitive>, depth: number, maxDepth: number): KDTreeNode {
@@ -45,7 +44,7 @@ export function buildKDTree(primitives: Array<Primitive>, depth: number, maxDept
     }
 
     // cases when stop spliting
-    if (primitives.length <= MIN_PRIMITIVES_IN_NODE || depth > maxDepth) {
+    if (primitives.length <= MAX_PRIMITIVES_IN_NODE || depth > maxDepth) {
         return node;
     }
     let axis = node.aabb.getLongestAxis();
@@ -70,5 +69,22 @@ export function buildKDTree(primitives: Array<Primitive>, depth: number, maxDept
     node.axis = axis;
     
     return node;
+
+}
+
+// traverse kd tree to assign id to each node
+function traverseKDTree(root: KDTreeNode) {
+    let count = 0;
+    let queue = Array<KDTreeNode>();
+    queue.push(root);
+    while (queue.length > 0) {
+        let node = queue.pop();
+        node.id = count++;
+        node.left && queue.push(node.left);
+        node.left && queue.push(node.right);
+    }
+}
+
+export function flattenKDTree() {
 
 }

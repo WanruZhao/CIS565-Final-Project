@@ -11,6 +11,7 @@ import Texture from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import { Scene } from './scene/scene';
+import { buildKDTree } from './scene/BVH';
 
 
 // Define an object with application parameters and button callbacks
@@ -64,28 +65,16 @@ function loadScene() {
   let texture;
 
   // load cube mesh 
-  objString = loadOBJText('resources/obj/cube.obj');
+  objString = loadOBJText('resources/obj/newCube.obj');
   mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   mesh.create();
   scene.addMesh('cube', mesh);
 
   // load table mesh 
-  objString = loadOBJText('resources/obj/table.obj');
+  objString = loadOBJText('resources/obj/newTable.obj');
   mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   mesh.create();
   scene.addMesh('table', mesh);
-
-  // // loade sphere mesh
-  // objString = loadOBJText('resources/obj/sphere.obj');
-  // mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  // mesh.create();
-  // scene.addMesh('sphere', mesh);
-
-  // load wahoo texture
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/wahoo.bmp');
-  textureSet.set('tex_Albedo', texture);
-  scene.addTextureSet('wahoo', textureSet);
 
   // load table texture
   textureSet = new Map<string, Texture>();
@@ -104,6 +93,9 @@ function loadScene() {
   texture = new Texture('resources/textures/environment.jpg');
   textureSet.set('tex_Albedo', texture);
   scene.addTextureSet('environment', textureSet);
+
+  // build KDTree
+  // scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
 
 }
 
@@ -177,8 +169,6 @@ function main() {
  
      // render cube
      renderer.renderToGBuffer(camera, [scene.getMesh('cube')], scene.getTextureSet('ice'));
- 
-     renderer.renderToGBuffer(camera, [scene.getMesh('cube')], scene.getTextureSet('environment')); 
 
 
     // ==============render from gbuffers into 32-bit color buffer=============
