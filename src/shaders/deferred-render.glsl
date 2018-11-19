@@ -13,6 +13,8 @@ uniform float u_Width;
 uniform mat4 u_View;
 uniform mat4 u_Proj;
 
+uniform vec4 u_LightPos;
+
 void main() { 
 	// read from GBuffers
 	vec4 col_0 = texture(u_gb0, fs_UV);
@@ -21,6 +23,9 @@ void main() {
 
 	// out_Col = vec4(col_0.rgb, 1.0);
 	// out_Col = vec4(col_1.rgb, 1.0);
-	out_Col = vec4(col_1.rgb, 1.0);
+
+	float lambert = clamp(dot(normalize(col_0.xyz), normalize(u_LightPos.xyz - col_1.xyz)), 0.4, 1.0);
+
+	out_Col = vec4(col_2.rgb * lambert, 1.0);
 	
 }

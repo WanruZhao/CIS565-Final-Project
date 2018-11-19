@@ -10,6 +10,7 @@ class ShadowPass extends ShaderProgram {
     
     unifPos: WebGLUniformLocation;
     unifNor: WebGLUniformLocation;
+    unifAlbedo: WebGLUniformLocation;
     unifSceneInfo: WebGLUniformLocation;
     unifTriangleCount: WebGLUniformLocation;
     unifLightPos: WebGLUniformLocation;

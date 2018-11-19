@@ -19,9 +19,9 @@ class OpenGLRenderer {
   depthTexture: WebGLTexture; 
 
   // --------------------------------                          
-  // original buffer render from g-buffer
-  // originalBufferFromGBuffer: WebGLFramebuffer;
-  // originalTargetFromGBuffer: WebGLTexture;
+  //original buffer render from g-buffer
+  originalBufferFromGBuffer: WebGLFramebuffer;
+  originalTargetFromGBuffer: WebGLTexture;
 
   // post-processing buffers post-tonemapping (8-bit color)
   // post8Buffers: WebGLFramebuffer[];
@@ -83,11 +83,14 @@ class OpenGLRenderer {
     this.shadowPass.unifPos = gl.getUniformLocation(this.shadowPass.prog, "u_Pos");
     this.shadowPass.unifNor = gl.getUniformLocation(this.shadowPass.prog, "u_Nor");
     this.shadowPass.unifSceneInfo = gl.getUniformLocation(this.shadowPass.prog, "u_SceneInfo");
+    this.shadowPass.unifAlbedo = gl.getUniformLocation(this.shadowPass.prog, "u_Albedo");
 
     this.shadowPass.use();
     gl.uniform1i(this.shadowPass.unifPos, 0);
     gl.uniform1i(this.shadowPass.unifNor, 1);
-    gl.uniform1i(this.shadowPass.unifSceneInfo, 2);
+    gl.uniform1i(this.shadowPass.unifAlbedo, 2);
+    gl.uniform1i(this.shadowPass.unifSceneInfo, 3);
+    
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -109,6 +112,7 @@ class OpenGLRenderer {
 
     this.deferredPass.setWidth(width);
     this.deferredPass.setHeight(height);
+    this.deferredPass.setLightPos(vec4.fromValues(20.0, 20.0, 0.0, 1.0));
 
     // --- GBUFFER CREATION START ---
     this.gBuffer = gl.createFramebuffer();
@@ -149,26 +153,26 @@ class OpenGLRenderer {
 
     // create the framebuffers for post processing
     // --------------------------------                          
-    // origin buffer and texture from g-buffer
-    // this.originalBufferFromGBuffer = gl.createFramebuffer()
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
-    // gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+    //origin buffer and texture from g-buffer
+    this.originalBufferFromGBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
 
-    // this.originalTargetFromGBuffer = gl.createTexture();
-    // gl.bindTexture(gl.TEXTURE_2D, this.originalTargetFromGBuffer);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
-    // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.originalTargetFromGBuffer, 0);
+    this.originalTargetFromGBuffer = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.originalTargetFromGBuffer);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.originalTargetFromGBuffer, 0);
 
-    // FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    // if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-    //   console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
-    // }
+    FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
+      console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
+    }
 
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
     // for (let i = 0; i < this.post8Buffers.length; i++) {
     //   // --------------------------------                          
@@ -301,8 +305,8 @@ class OpenGLRenderer {
   }
 
   renderFromGBuffer(camera: Camera) {
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
+    //gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
     this.deferredPass.drawElement(camera, this.gbTargets);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
@@ -320,11 +324,13 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
+    textures.push(this.originalTargetFromGBuffer);
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
     }
 
-    this.shadowPass.drawElement(camera, textures, triangleCount, vec4.fromValues(0.0, 20.0, 0.0, 1.0), this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+
+    this.shadowPass.drawElement(camera, textures, triangleCount, vec4.fromValues(20.0, 20.0, 0.0, 1.0), this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

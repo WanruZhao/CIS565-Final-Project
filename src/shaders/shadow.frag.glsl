@@ -3,6 +3,7 @@ precision highp float;
 
 uniform sampler2D u_Pos;
 uniform sampler2D u_Nor;
+uniform sampler2D u_Albedo;
 uniform sampler2D u_SceneInfo; // extend to multiple textures
 uniform int u_SceneTexWidth; // extend to multiple size
 uniform int u_SceneTexHeight; // extend to multiple size
@@ -18,52 +19,32 @@ out vec4 out_Col;
 
 /* optimization: BVH, backface culling */
 
-bool isIntersectWithTriangle(in vec3 raydir, in vec3 rayorigin, in vec3 p0, in vec3 p1, in vec3 p2, out float t) {
+bool isIntersectWithTriangle(in vec3 raydir, in vec3 rayorigin, in vec3 p0, in vec3 p1, in vec3 p2, in vec3 normal, out float t) {
+
     vec3 e1 = p1 - p0;
     vec3 e2 = p2 - p0;
-    // vec3 q = cross(raydir, e2);
-    // float a = dot(e1, q);
-    // if(a > - 0.00001 && a < 0.00001) {
-    //     t = 0.0;
-    //     return false;
-    // }
-    // float f = 1.0 / a;
-    // vec3 s = rayorigin - p0;
-    // float u = f * dot(s, q);
-    // if(u < 0.0) {
-    //     t = 0.0;
-    //     return false;
-    // }
-    // vec3 r = cross(s, e1);
-    // float v = f * dot(raydir, r);
-    // if(v < 0.0 || u + v > 1.0) {
-    //     t = 0.0;
-    //     return false;
-    // }
-    // t = f * dot(e2, r);
-    // return true;
-
-    vec3 n = cross(e1, e2);
-    float a = - dot(n, raydir);
+    vec3 q = cross(raydir, e2);
+    float a = dot(e1, q);
     if(a > -0.00001 && a < 0.00001) {
         t = 0.0;
         return false;
     }
     float f = 1.0 / a;
     vec3 s = rayorigin - p0;
-    vec3 m = cross(s, raydir);
-    float u = f * dot(m, e2);
+    float u = f * dot(s, q);
     if(u < 0.0) {
         t = 0.0;
         return false;
     }
-    float v = - f * dot(m, e1);
+    vec3 r = cross(s, e1);
+    float v = f * dot(raydir, r);
     if(v < 0.0 || u + v > 1.0) {
         t = 0.0;
         return false;
     }
-    t = f * dot(n, s);
+    t = f * dot(e2, r);
     return true;
+
 }
 
 void getTrianglePosition(in int index, out vec3 p0, out vec3 p1, out vec3 p2) {
@@ -82,6 +63,24 @@ void getTrianglePosition(in int index, out vec3 p0, out vec3 p1, out vec3 p2) {
     p2 = texture(u_SceneInfo, vec2(u, v2)).xyz;
 }
 
+vec3 getTriangleNormal(in int index) {
+    int row = index / u_SceneTexWidth;
+    int col = index - row * u_SceneTexWidth;
+
+    row = row * 6;
+
+    float u = (float(col) + 0.5) / float(u_SceneTexWidth);
+    float v0 = (float(row) + 3.5) / float(u_SceneTexHeight);
+    float v1 = (float(row) + 4.5) / float(u_SceneTexHeight);
+    float v2 = (float(row) + 5.5) / float(u_SceneTexHeight);
+
+    vec3 n0 = normalize(texture(u_SceneInfo, vec2(u, v0)).xyz);
+    vec3 n1 = normalize(texture(u_SceneInfo, vec2(u, v1)).xyz);
+    vec3 n2 = normalize(texture(u_SceneInfo, vec2(u, v2)).xyz);
+
+    return (n0 + n1 + n2) / 3.0;
+}
+
 // calculate if ray hits one triangle
 bool isHit(in vec3 raydir, in vec3 rayorigin, out float t) {
 
@@ -92,8 +91,9 @@ bool isHit(in vec3 raydir, in vec3 rayorigin, out float t) {
 
     for(int i = 0; i < u_TriangleCount; i++) {
         getTrianglePosition(i, p0, p1, p2);
-        if(isIntersectWithTriangle(raydir, rayorigin, p0, p1, p2, t)) {
-            if(t > 0.0 && t <= 1.0) {
+        vec3 normal = getTriangleNormal(i);
+        if(isIntersectWithTriangle(raydir, rayorigin, p0, p1, p2, normal, t)) {
+            if(t < 1.0 && t > 0.0) {
                 return true;
             }
         }
@@ -109,21 +109,18 @@ void main()
     vec4 worldPos = texture(u_Pos, pixel);
 
 
-    vec3 rayorigin = worldPos.xyz + texture(u_Nor, pixel).xyz * 0.0001;
+    vec3 rayorigin = worldPos.xyz + normalize(texture(u_Nor, pixel).xyz) * 0.001;
     vec3 raydir = u_LightPos.xyz - rayorigin;
 
     vec3 hitpoint = vec3(0.0);
     vec3 hitnormal = vec3(0.0);
 
     float t = 10.0;
-
+    vec4 col = texture(u_Albedo, pixel);
     if(isHit(raydir, rayorigin, t)) {
-        out_Col = vec4(vec3(0.0), 1.0);
+        out_Col = vec4(col.xyz * 0.2, 1.0);
     } else {
-        out_Col = vec4(abs(normalize(rayorigin)), 1.0);
+        out_Col = col;
     }
-
-    //out_Col = vec4(abs(normalize(raydir)), 1.0);
-    //out_Col = vec4(t, 0.0, 0.0, 1.0);
 
 }

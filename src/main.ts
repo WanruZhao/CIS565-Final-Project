@@ -101,6 +101,10 @@ function loadScene() {
   meshes.push(scene.getMesh("table"));
   triangleCount = triangleCount + scene.getMesh("table").count / 3;
 
+  console.log(scene.getMesh("cube").count);
+  console.log(scene.getMesh("cube").positions.length);
+  console.log(scene.getMesh("cube").normals.length);
+
   meshes.push(scene.getMesh("cube"));
   triangleCount = triangleCount + scene.getMesh("cube").count / 3;
 
@@ -136,15 +140,15 @@ function loadScene() {
 
       for(let k = 0; k < 3; k++) {
         // position
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 0)] = meshes[i].positions[3 * vertexIdx[k]];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 1)] = meshes[i].positions[3 * vertexIdx[k] + 1];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 2)] = meshes[i].positions[3 * vertexIdx[k] + 2];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 0)] = meshes[i].positions[4 * vertexIdx[k]];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 1)] = meshes[i].positions[4 * vertexIdx[k] + 1];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 2)] = meshes[i].positions[4 * vertexIdx[k] + 2];
         sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 0, k, 3)] = 1.0;
 
         // normal
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 0)] = meshes[i].normals[3 * vertexIdx[k]];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 1)] = meshes[i].normals[3 * vertexIdx[k] + 1];
-        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 2)] = meshes[i].normals[3 * vertexIdx[k] + 2];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 0)] = meshes[i].normals[4 * vertexIdx[k]];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 1)] = meshes[i].normals[4 * vertexIdx[k] + 1];
+        sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 2)] = meshes[i].normals[4 * vertexIdx[k] + 2];
         sceneInfo[textureIdx]._buffer[sceneInfo[textureIdx].bufferIndex(localTriangleIdx, 1, k, 3)] = 0.0;
       }
 
@@ -235,7 +239,7 @@ function main() {
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
 
-    //renderer.shadowStage(camera, sceneInfo, triangleCount);
+    renderer.shadowStage(camera, sceneInfo, triangleCount);
 
   
     stats.end();

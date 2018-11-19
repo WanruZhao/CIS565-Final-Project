@@ -6,7 +6,10 @@ import {vec3, vec4, mat4} from 'gl-matrix';
 import Camera from '../../../Camera';
 
 class DeferredPass extends ShaderProgram {
-	screenQuad: Square; // Quadrangle onto which we draw the frame texture of the last render pass
+  screenQuad: Square; // Quadrangle onto which we draw the frame texture of the last render pass
+  
+
+  unifLightPos: WebGLUniformLocation;
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
@@ -17,7 +20,9 @@ class DeferredPass extends ShaderProgram {
 		if (this.screenQuad === undefined) {
 			this.screenQuad = new Square(vec3.fromValues(0, 0, 0));
 			this.screenQuad.create();
-		}
+    }
+    
+    this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
 	}
 
     drawElement(camera: Camera, gbTargets: WebGLTexture[]) {
@@ -37,7 +42,14 @@ class DeferredPass extends ShaderProgram {
         }
     
   		super.draw(this.screenQuad);
-  	}
+    }
+    
+    setLightPos(pos: vec4) {
+      this.use();
+      if(this.unifLightPos != -1) {
+        gl.uniform4fv(this.unifLightPos, pos);
+      }
+    }
 
 }
 
