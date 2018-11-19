@@ -98,9 +98,9 @@ export class TextureBuffer
 
 	
 	  update() {
-		gl.bindTexture(gl.TEXTURE_2D, this._texture);
-		gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this._width, this._height, gl.RGBA, gl.FLOAT, this._buffer);
-		gl.bindTexture(gl.TEXTURE_2D, null);
+			gl.bindTexture(gl.TEXTURE_2D, this._texture);
+			gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this._width, this._height, gl.RGBA, gl.FLOAT, this._buffer);
+			gl.bindTexture(gl.TEXTURE_2D, null);
 	  }
 };
 

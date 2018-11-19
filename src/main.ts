@@ -71,24 +71,15 @@ function loadScene() {
   wahooMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   wahooMesh.create();
 
-  meshes.push(wahooMesh);
-  triangleCount = triangleCount + wahooMesh.count / 3;
-
   // load cube mesh
   objString = loadOBJText('resources/obj/cube.obj');
   cubeMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   cubeMesh.create();
 
-  meshes.push(cubeMesh);
-  triangleCount = triangleCount + cubeMesh.count / 3;
-
   // loade sphere mesh
   objString = loadOBJText('resources/obj/sphere.obj');
   sphereMesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   sphereMesh.create();
-
-  meshes.push(sphereMesh);
-  triangleCount = triangleCount + sphereMesh.count / 3;
 
 
   // load wahoo textures
@@ -117,6 +108,21 @@ function loadScene() {
   envTextures.set('tex_Albedo', envAlbedoTex);
 
 
+  // true scene meshes load, needed to be changed if scene changes
+  meshes.push(cubeMesh);
+  triangleCount = triangleCount + cubeMesh.count / 3;
+
+  meshes.push(cubeMesh);
+  triangleCount = triangleCount + cubeMesh.count / 3;
+
+  meshes.push(cubeMesh);
+  triangleCount = triangleCount + cubeMesh.count / 3;
+
+  meshes.push(sphereMesh);
+  triangleCount = triangleCount + sphereMesh.count / 3;
+
+  meshes.push(sphereMesh);
+  triangleCount = triangleCount + sphereMesh.count / 3;
 
 
   console.log("triangle count = " + triangleCount);
@@ -134,7 +140,13 @@ function loadScene() {
     }
   }
 
+  console.log("max triangle count per texture = " + maxTriangleCountPerTexture);
+  console.log("actual number of textures used = " + sceneTexCount);
+
   // store position and normal info into texture
+  /* What is store in this texture should be optimized later
+    Such as for a triangle, just store p0, e1(p1 - p0), e2(p2 - p0) and n(e1 X e2)
+  */
   let currentCount = 0;
   for(let i = 0; i < meshes.length; i++) {
     for(let j = 0; j < meshes[i].count / 3; j++) {
@@ -261,6 +273,8 @@ function main() {
     // ==============render from gbuffers into 32-bit color buffer=============
     renderer.renderFromGBuffer(camera);
     // apply 32-bit post and tonemap from 32-bit color to 8-bit color
+
+    renderer.shadowStage(camera, sceneInfo, triangleCount);
 
   
     stats.end();

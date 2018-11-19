@@ -2,16 +2,19 @@ import {gl} from '../../../globals';
 import ShaderProgram, {Shader} from '../ShaderProgram';
 import Drawable from '../Drawable';
 import Square from '../../../geometry/Square';
-import {vec3, vec4, mat4} from 'gl-matrix';
+import {vec2, vec3, vec4, mat4} from 'gl-matrix';
 import Camera from '../../../Camera';
 
 class ShadowPass extends ShaderProgram {
     screenQuad: Square; // Quadrangle onto which we draw the frame texture of the last render pass
     
-    unifCamera: WebGLUniformLocation;
-    unifViewInv: WebGLUniformLocation;
-    unifProjInv: WebGLUniformLocation;
-    unifFar: WebGLUniformLocation;
+    unifPos: WebGLUniformLocation;
+    unifNor: WebGLUniformLocation;
+    unifSceneInfo: WebGLUniformLocation;
+    unifTriangleCount: WebGLUniformLocation;
+    unifLightPos: WebGLUniformLocation;
+    unifSceneTexWidth: WebGLUniformLocation;
+    unifSceneTexHeight: WebGLUniformLocation;
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
@@ -24,61 +27,55 @@ class ShadowPass extends ShaderProgram {
 			this.screenQuad.create();
         }
         
-        this.unifCamera = gl.getUniformLocation(this.prog, "u_Camera");
-        this.unifViewInv = gl.getUniformLocation(this.prog, "u_ViewInv");
-        this.unifProjInv  = gl.getUniformLocation(this.prog, "u_ProjInv");
-        this.unifFar = gl.getUniformLocation(this.prog, "u_Far");
+        this.unifTriangleCount  = gl.getUniformLocation(this.prog, "u_TriangleCount");
+        this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
+        this.unifSceneTexWidth = gl.getUniformLocation(this.prog, "u_SceneTexWidth");
+        this.unifSceneTexHeight = gl.getUniformLocation(this.prog, "u_SceneTexHeight");
 	}
 
-    drawElement(camera: Camera, canvas: HTMLCanvasElement) {
+    drawElement(camera: Camera, targets: WebGLTexture[], count: number, lightpos: vec4, canvas: HTMLCanvasElement, scenetexwidth: number, scenetexheight: number) {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.disable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
-        let view = camera.viewMatrix;
-        let proj = camera.projectionMatrix;
-        this.setViewMatrix(view);
-        this.setProjMatrix(proj);
-        this.setCamera(camera.position);
-        this.setFar(camera.far);
-        this.setViewInv(mat4.invert(mat4.create(), camera.viewMatrix));
-        this.setProjInv(mat4.invert(mat4.create(), camera.projectionMatrix));
+        this.setTriangleCount(count);
+        this.setLightPos(lightpos);
         this.setHeight(canvas.height);
         this.setWidth(canvas.width);
+        this.setSceneTextureSize(scenetexwidth, scenetexheight);
+
+        for (let i = 0; i < targets.length; i ++) {
+            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.bindTexture(gl.TEXTURE_2D, targets[i]);
+        }
+
   		super.draw(this.screenQuad);
       }
       
-      setCamera(pos: vec3)
-      {
+
+      setTriangleCount(count: number) {
+          this.use();
+          if(this.unifTriangleCount != -1) {
+              gl.uniform1i(this.unifTriangleCount, count);
+          }
+      }
+
+      setLightPos(pos: vec4) {
         this.use();
-        if(this.unifCamera != -1) {
-            gl.uniform3fv(this.unifCamera, pos);
+        if(this.unifLightPos != -1) {
+            gl.uniform4fv(this.unifLightPos, pos);
         }
       }
 
-      setViewInv(viewInv: mat4)
-      {
-        this.use();
-        if(this.unifViewInv != -1) {
-            gl.uniformMatrix4fv(this.unifViewInv, false, viewInv);
-        }
-      }
-
-      setProjInv(projInv: mat4)
-      {
-        this.use();
-        if(this.unifProjInv != -1) {
-            gl.uniformMatrix4fv(this.unifProjInv, false, projInv);
-        }
-      }
-
-      setFar(far: number)
-      {
-        this.use();
-        if(this.unifFar !== -1){
-            gl.uniform1f(this.unifFar, far);
-        }
+      setSceneTextureSize(width: number, height: number) {
+          this.use();
+          if(this.unifSceneTexWidth != -1) {
+              gl.uniform1i(this.unifSceneTexWidth, width);
+          }
+          if(this.unifSceneTexHeight != -1) {
+              gl.uniform1i(this.unifSceneTexHeight, height);
+          }
       }
 
 }

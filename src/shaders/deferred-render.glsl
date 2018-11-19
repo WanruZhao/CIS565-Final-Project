@@ -21,6 +21,6 @@ void main() {
 
 	// out_Col = vec4(col_0.rgb, 1.0);
 	// out_Col = vec4(col_1.rgb, 1.0);
-	out_Col = vec4(col_2.rgb, 1.0);
+	out_Col = vec4(col_1.rgb, 1.0);
 	
 }

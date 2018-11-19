@@ -8,6 +8,7 @@ uniform mat4 u_ViewInv;
 uniform mat4 u_ProjInv;
 uniform float u_Far;
 
+in vec2 fs_UV;
 out vec4 out_Col;
 
 // cast ray for every pixel from eye position
@@ -16,9 +17,7 @@ void main()
     // convert pixel position from screen space to world space
     // calculate ray direction from camera position and pixel position
 
-    vec2 pixel = gl_FragCoord.xy;
-    pixel.x = pixel.x / u_Width * 2.0 - 1.0;
-    pixel.y = 1.0 - pixel.y / u_Height * 2.0;
+    vec2 pixel = fs_UV;
 
     vec4 worldPos = u_ViewInv * u_ProjInv * (vec4(pixel, 1.0, 1.0) * u_Far);
 

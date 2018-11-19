@@ -1,6 +1,5 @@
 import {gl} from '../../../globals';
 import ShaderProgram, {Shader} from '../ShaderProgram';
-import Drawable from '../Drawable';
 import Square from '../../../geometry/Square';
 import {vec3, vec4, mat4} from 'gl-matrix';
 import Camera from '../../../Camera';
