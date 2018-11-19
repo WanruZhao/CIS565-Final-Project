@@ -21,21 +21,7 @@ const controls = {
   PostProcessingType: 'Deferred',
 };
 
-let objString: string;
-let tex: Texture;
-let wahooTextures: Map<string, Texture>;
-let tableTextures: Map<string, Texture>;
-let cubeTextures: Map<string, Texture>;
-let sphereTextures: Map<string, Texture>;
-let envTextures: Map<string, Texture>;
-
-
-let cubeMesh: Mesh;
-let wahooMesh: Mesh;
-let sphereMesh: Mesh;
-
 let scene: Scene;
-
 
 let meshes: Mesh[];
 let sceneInfo: TextureBuffer[];
@@ -73,23 +59,29 @@ function loadScene() {
   let textureSet;
   let texture;
 
-  // load cube mesh 
-  objString = loadOBJText('resources/obj/newCube.obj');
-  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
-  mesh.create();
-  scene.addMesh('cube', mesh);
-
   // load table mesh 
-  objString = loadOBJText('resources/obj/newTable.obj');
+  objString = loadOBJText('resources/obj/table.obj');
   mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   mesh.create();
   scene.addMesh('table', mesh);
 
-  // load table texture
+  // load wall mesh 
+  objString = loadOBJText('resources/obj/wall.obj');
+  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  mesh.create();
+  scene.addMesh('wall', mesh);
+
+  // load models mesh 
+  objString = loadOBJText('resources/obj/models.obj');
+  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  mesh.create();
+  scene.addMesh('models', mesh);
+
+  // load marble texture
   textureSet = new Map<string, Texture>();
   texture = new Texture('resources/textures/marble.jpg');
   textureSet.set('tex_Albedo', texture);
-  scene.addTextureSet('table', textureSet);
+  scene.addTextureSet('marble', textureSet);
 
   // load ice texture
   textureSet = new Map<string, Texture>();
@@ -97,17 +89,35 @@ function loadScene() {
   textureSet.set('tex_Albedo', texture);
   scene.addTextureSet('ice', textureSet);
 
+  // load ice texture
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/paper.jpg');
+  textureSet.set('tex_Albedo', texture);
+  scene.addTextureSet('paper', textureSet);
+
+  // load wall texture
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/wall.jpg');
+  textureSet.set('tex_Albedo', texture);
+  scene.addTextureSet('wall', textureSet);
+
 
   // true scene meshes load, needed to be changed if scene changes
+  // meshes.push(scene.getMesh("table"));
+  // triangleCount = triangleCount + scene.getMesh("table").count / 3;
+
+  // console.log(scene.getMesh("cube").count);
+  // console.log(scene.getMesh("cube").positions.length);
+  // console.log(scene.getMesh("cube").normals.length);
+
   meshes.push(scene.getMesh("table"));
   triangleCount = triangleCount + scene.getMesh("table").count / 3;
 
-  console.log(scene.getMesh("cube").count);
-  console.log(scene.getMesh("cube").positions.length);
-  console.log(scene.getMesh("cube").normals.length);
+  meshes.push(scene.getMesh("wall"));
+  triangleCount = triangleCount + scene.getMesh("wall").count / 3;
 
-  meshes.push(scene.getMesh("cube"));
-  triangleCount = triangleCount + scene.getMesh("cube").count / 3;
+  meshes.push(scene.getMesh("models"));
+  triangleCount = triangleCount + scene.getMesh("models").count / 3;
 
 
   console.log("triangle count = " + triangleCount);
@@ -228,18 +238,13 @@ function main() {
     renderer.clearGB();
 
     // ==============forward render mesh info into gbuffers================
-    let modelMatrix = mat4.create();
-    mat4.identity(modelMatrix);
-  
-     // render table
-     renderer.renderToGBuffer(camera, [scene.getMesh('table')], scene.getTextureSet('table'));  
- 
-     // render cube
-     renderer.renderToGBuffer(camera, [scene.getMesh('cube')], scene.getTextureSet('ice'));
+    // render demo scene
+    renderer.renderToGBuffer(camera, [scene.getMesh('table')], scene.getTextureSet('marble'));  
+    renderer.renderToGBuffer(camera, [scene.getMesh('wall')], scene.getTextureSet('wall'));  
+    renderer.renderToGBuffer(camera, [scene.getMesh('models')], scene.getTextureSet('ice'));  
+    
 
-    // ==============render from gbuffers into 32-bit color buffer=============
     renderer.renderFromGBuffer(camera);
-    // apply 32-bit post and tonemap from 32-bit color to 8-bit color
 
     renderer.shadowStage(camera, sceneInfo, triangleCount);
 

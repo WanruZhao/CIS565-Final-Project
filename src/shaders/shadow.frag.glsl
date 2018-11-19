@@ -121,6 +121,6 @@ void main()
         out_Col = vec4(col.xyz * 0.2, 1.0);
     } else {
         out_Col = col;
+        // out_Col = vec4(1.0, 1.0, 1.0, 1.0);
     }
-
 }

@@ -15,6 +15,7 @@ import { reverse } from 'dns';
 
 class OpenGLRenderer {
 
+  lightPos: vec4 = vec4.fromValues(5.0, 5.0, 5.0, 1.0); // currently one light
 
   depthTexture: WebGLTexture; 
 
@@ -57,7 +58,6 @@ class OpenGLRenderer {
     // set up gBufferPass    
     this.gBufferPass = new GBufferPass(require('../../shaders/standard-vert.glsl'), 
                                       require('../../shaders/standard-frag.glsl'));
-    // this.gBufferPass.setupTexUnits(["tex_Color"]);
 
     // set up deferredPass
     this.deferredPass = new DeferredPass(require('../../shaders/screenspace-vert.glsl'), 
@@ -112,7 +112,7 @@ class OpenGLRenderer {
 
     this.deferredPass.setWidth(width);
     this.deferredPass.setHeight(height);
-    this.deferredPass.setLightPos(vec4.fromValues(20.0, 20.0, 0.0, 1.0));
+    this.deferredPass.setLightPos(this.lightPos);
 
     // --- GBUFFER CREATION START ---
     this.gBuffer = gl.createFramebuffer();
@@ -173,38 +173,6 @@ class OpenGLRenderer {
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-    // for (let i = 0; i < this.post8Buffers.length; i++) {
-    //   // --------------------------------                          
-    //   // 8 bit buffers have unsigned byte textures of type gl.RGBA8
-    //   this.post8Buffers[i] = gl.createFramebuffer()
-    //   gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[i]);
-    //   gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
-
-    //   this.post8Targets[i] = gl.createTexture();
-    //   gl.bindTexture(gl.TEXTURE_2D, this.post8Targets[i]);
-    //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    //   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    //   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    //   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post8Targets[i], 0);
-
-    //   FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    //   if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-    //     console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
-    //   }
-
-    //   FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-    //   if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-    //     console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
-    //   }
-
-    //   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // }
-
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.bindTexture(gl.TEXTURE_2D, null);
 
     //------------------------------------------------------------bind ray trace passes------------------------------------------------------------------
     // ray cast pass
@@ -306,7 +274,7 @@ class OpenGLRenderer {
 
   renderFromGBuffer(camera: Camera) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
-    //gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
     this.deferredPass.drawElement(camera, this.gbTargets);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
@@ -330,7 +298,7 @@ class OpenGLRenderer {
     }
 
 
-    this.shadowPass.drawElement(camera, textures, triangleCount, vec4.fromValues(20.0, 20.0, 0.0, 1.0), this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+    this.shadowPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
