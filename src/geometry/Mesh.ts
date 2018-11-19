@@ -2,6 +2,8 @@ import {vec3, vec4} from 'gl-matrix';
 import Drawable from '../rendering/gl/Drawable';
 import {gl} from '../globals';
 import * as Loader from 'webgl-obj-loader';
+import { Primitive } from '../scene/scene';
+import { Texture } from '../rendering/gl/Texture';
 
 class Mesh extends Drawable {
   indices: Uint32Array;
@@ -10,6 +12,7 @@ class Mesh extends Drawable {
   colors: Float32Array;
   uvs: Float32Array;
   center: vec4;
+  primitives: Array<Primitive>
 
   objString: string;
 
@@ -20,7 +23,7 @@ class Mesh extends Drawable {
     this.objString = objString;
   }
 
-  create() {  
+  create() {      
     let posTemp: Array<number> = [];
     let norTemp: Array<number> = [];
     let uvsTemp: Array<number> = [];
@@ -77,7 +80,40 @@ class Mesh extends Drawable {
 
     console.log(`Created Mesh from OBJ`);
     this.objString = ""; // hacky clear
+
+    this.buildPrimitives();
   }
+
+  buildPrimitives() {
+    this.primitives = new Array<Primitive>();
+
+    for (let primitiveID = 0; primitiveID * 3 < this.indices.length; ++primitiveID) {
+      let idx0 = this.indices[primitiveID * 3 + 0];
+      let idx1 = this.indices[primitiveID * 3 + 1];
+      let idx2 = this.indices[primitiveID * 3 + 2];
+      
+      let point0 = vec4.fromValues(this.positions[idx0 * 4 + 0], 
+                                    this.positions[idx0 * 4 + 1],
+                                    this.positions[idx0 * 4 + 2],
+                                    this.positions[idx0 * 4 + 3]);
+
+      let point1 = vec4.fromValues(this.positions[idx1 * 4 + 0], 
+                                    this.positions[idx1 * 4 + 1],
+                                    this.positions[idx1 * 4 + 2],
+                                    this.positions[idx1 * 4 + 3]);
+
+      let point2 = vec4.fromValues(this.positions[idx2 * 4 + 0], 
+                                    this.positions[idx2 * 4 + 1],
+                                    this.positions[idx2 * 4 + 2],
+                                    this.positions[idx2 * 4 + 3]);
+
+      let primitive = new Primitive(point0, point1, point2, primitiveID);
+      this.primitives.push(primitive);
+
+    }
+
+  }
+
 };
 
 export default Mesh;
