@@ -1,6 +1,7 @@
 import { vec3, vec4 } from 'gl-matrix';
 import Mesh from '../geometry/Mesh';
 import { Texture } from '../rendering/gl/Texture';
+import { KDTreeNode, buildKDTree } from './BVH';
 
 export class AABB {
     min: vec3
@@ -105,16 +106,23 @@ export class Scene {
     primitives: Array<Primitive>
     meshes: Map<string, Mesh>
     textureSets: Map<string, Map<string, Texture>>
+    kdTreeRoot: KDTreeNode
 
     constructor() {
         this.primitives = new Array<Primitive>();
         this.meshes = new Map<string, Mesh>();
         this.textureSets = new Map<string, Map<string, Texture>>();
-        
+        this.kdTreeRoot = null;
     }
 
     addMesh(name: string, mesh: Mesh) {
         this.meshes.set(name, mesh);
+
+        let count = this.primitives.length;
+        mesh.primitives.forEach(primitive => {
+            primitive.id = count++;
+            this.primitives.push(primitive);
+        });
     }
 
     addTextureSet(name: string, textureSet: Map<string, Texture>) {

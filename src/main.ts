@@ -11,6 +11,7 @@ import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import { Scene } from './scene/scene';
+import { buildKDTree } from './scene/BVH';
 
 const maxTextureSize : number = 4096;
 
@@ -73,13 +74,13 @@ function loadScene() {
   let texture;
 
   // load cube mesh 
-  objString = loadOBJText('resources/obj/cube.obj');
+  objString = loadOBJText('resources/obj/newCube.obj');
   mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   mesh.create();
   scene.addMesh('cube', mesh);
 
   // load table mesh 
-  objString = loadOBJText('resources/obj/table.obj');
+  objString = loadOBJText('resources/obj/newTable.obj');
   mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
   mesh.create();
   scene.addMesh('table', mesh);
@@ -160,6 +161,9 @@ function loadScene() {
     sceneInfo[i].update();
   }
 
+  // build KDTree
+  // scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
+
 }
 
 
@@ -232,8 +236,6 @@ function main() {
  
      // render cube
      renderer.renderToGBuffer(camera, [scene.getMesh('cube')], scene.getTextureSet('ice'));
- 
-
 
     // ==============render from gbuffers into 32-bit color buffer=============
     renderer.renderFromGBuffer(camera);
