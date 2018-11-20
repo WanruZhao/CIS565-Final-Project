@@ -223,6 +223,8 @@ class OpenGLRenderer {
 
   updateTime(deltaTime: number, currentTime: number) {
     this.currentTime = currentTime;
+    this.shadowPass.setTime(this.currentTime);
+    this.deferredPass.setTime(this.currentTime);
   }
 
 
@@ -301,6 +303,7 @@ class OpenGLRenderer {
       textures.push(sceneInfo[i].texture);
     }
 
+    this.shadowPass.setViewMatrix(camera.viewMatrix);
 
     this.shadowPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
 

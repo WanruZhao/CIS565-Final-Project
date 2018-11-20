@@ -13,6 +13,7 @@ uniform float u_Height;
 
 // currently one light
 uniform vec4 u_LightPos;
+uniform float u_Time;
 
 in vec2 fs_UV;
 out vec4 out_Col;
@@ -108,9 +109,12 @@ void main()
     vec2 pixel = fs_UV; 
     vec4 worldPos = texture(u_Pos, pixel);
 
+    vec3 dynamiclightpos = u_LightPos.xyz;
+	dynamiclightpos.x *= sin(u_Time);
+
 
     vec3 rayorigin = worldPos.xyz + normalize(texture(u_Nor, pixel).xyz) * 0.001;
-    vec3 raydir = u_LightPos.xyz - rayorigin;
+    vec3 raydir = (dynamiclightpos).xyz - rayorigin;
 
     vec3 hitpoint = vec3(0.0);
     vec3 hitnormal = vec3(0.0);
@@ -123,4 +127,6 @@ void main()
         out_Col = col;
         // out_Col = vec4(1.0, 1.0, 1.0, 1.0);
     }
+
+    //out_Col = vec4(normalize(texture(u_SceneInfo, pixel).xyz), 1.0);
 }
