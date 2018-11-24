@@ -128,8 +128,6 @@ export class Primitive {
 
 export class Scene {
     primitives: Array<Primitive>
-    // meshes: Map<string, Mesh>
-    // textureSets: Map<string, Map<string, Texture>>
     meshes: Mesh[]
     textureSets: Array<Map<string, Texture>>
     kdTreeRoot: KDTreeNode
