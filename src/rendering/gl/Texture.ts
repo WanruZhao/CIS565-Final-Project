@@ -55,6 +55,7 @@ export class TextureBuffer
 	_elementCount: number;
 	_width: number;
 	_height: number;
+	_elementPerTriangle: number;
 	
 
 	// infoSize: position, normal, currently each use one pixel
@@ -69,9 +70,10 @@ export class TextureBuffer
 
 		this._triangleCount = triangleCount;
 		this._elementCount = elementCount;
+		this._elementPerTriangle = 3 * Math.min(elementCount, 3) + Math.max(0, elementCount - 3);
 
 		this._width = Math.min(maxTextureSize, triangleCount);
-		this._height = Math.ceil(triangleCount / maxTextureSize) * 3 * elementCount;
+		this._height = Math.ceil(triangleCount / maxTextureSize) * this._elementPerTriangle;
 
   		gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, this._width, this._height, 0, gl.RGBA, gl.FLOAT, null);
@@ -89,11 +91,14 @@ export class TextureBuffer
 		return this._buffer;
 	  }
 
-	  // get positions or normals for a triangle, triangleIndex is the local index in this texture
+	  // positions, normals, UV, basecolor, material
 	  bufferIndex(triangleIndex: number, component: number, index: number, bit: number){
-		  let row = Math.floor(triangleIndex / this._width);
-		  let col = triangleIndex - row * this._width;
-		  return row * 3 * this._elementCount * 4 * this._width + 3 * component * 4 * this._width + index * 4 * this._width + col * 4 + bit;
+		let row = Math.floor(triangleIndex / this._width);
+		let col = triangleIndex - row * this._width;
+		let offset = Math.min(component, 3) * 3 + Math.max(0, component - 3) +  row * this._elementPerTriangle + index;
+		
+		return offset * this._width * 4 + col * 4 + bit;
+		//   return row * 3 * this._elementCount * 4 * this._width + 3 * component * 4 * this._width + index * 4 * this._width + col * 4 + bit;
 	  }
 
 	

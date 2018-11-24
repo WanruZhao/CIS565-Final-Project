@@ -67,7 +67,7 @@ function loadScene() {
 
   // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);
+  material = new Material(1.0, 0.0, 0.0);
   baseColor = vec4.fromValues(0.3, 0.3, 0.3, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -79,7 +79,7 @@ function loadScene() {
 
   // load wall mesh && textures
   objString = loadOBJText('resources/obj/wall.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  material = new Material(1.0, 0.0, 0.0);  
   baseColor = vec4.fromValues(0.8, 0.8, 0.8, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -91,7 +91,7 @@ function loadScene() {
 
   // load models mesh & textures
   objString = loadOBJText('resources/obj/models.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  material = new Material(1.0, 0.0, 0.0);  
   baseColor = vec4.fromValues(0.7, 0.3, 0.3, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
