@@ -12,14 +12,16 @@ class Mesh extends Drawable {
   colors: Float32Array;
   uvs: Float32Array;
   primitives: Array<Primitive>
-  material: Material
+  baseColor: vec4 // go to the first pixel
+  material: Material  // go to the second pixel
 
   objString: string;
 
-  constructor(objString: string, material: Material) {
+  constructor(objString: string, material: Material, baseColor: vec4) {
     super(); // Call the constructor of the super class. This is required.
     this.objString = objString;
     this.material = material;
+    this.baseColor = baseColor;
   }
 
   create() {      

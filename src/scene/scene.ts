@@ -58,12 +58,12 @@ export class Material {
     diffuse: number
     reflection: number
     refraction: number
+
     
     constructor(specular: number, 
                 diffuse: number, 
                 reflection: number, 
                 refraction: number) {
-
         this.specular = specular,
         this.diffuse = diffuse,
         this.reflection = reflection,
