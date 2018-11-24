@@ -2,7 +2,7 @@ import {vec3, vec4} from 'gl-matrix';
 import Drawable from '../rendering/gl/Drawable';
 import {gl} from '../globals';
 import * as Loader from 'webgl-obj-loader';
-import { Primitive } from '../scene/scene';
+import { Primitive, Material } from '../scene/scene';
 import { Texture } from '../rendering/gl/Texture';
 
 class Mesh extends Drawable {
@@ -11,16 +11,15 @@ class Mesh extends Drawable {
   normals: Float32Array;
   colors: Float32Array;
   uvs: Float32Array;
-  center: vec4;
   primitives: Array<Primitive>
+  material: Material
 
   objString: string;
 
-  constructor(objString: string, center: vec3) {
+  constructor(objString: string, material: Material) {
     super(); // Call the constructor of the super class. This is required.
-    this.center = vec4.fromValues(center[0], center[1], center[2], 1);
-
     this.objString = objString;
+    this.material = material;
   }
 
   create() {      

@@ -10,7 +10,7 @@ import ShaderProgram, {Shader} from './rendering/gl/ShaderProgram';
 import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
-import { Scene } from './scene/scene';
+import { Scene, Material } from './scene/scene';
 import { buildKDTree } from './scene/BVH';
 import { WSAENETDOWN } from 'constants';
 
@@ -59,11 +59,15 @@ function loadScene() {
   let mesh;
   let textureSet;
   let texture;
+  let material;
+
+
 
 
   // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
-  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  material = new Material(1.0, 0.0, 0.0, 0.0);
+  mesh = new Mesh(objString, material);
   mesh.create();
 
   textureSet = new Map<string, Texture>();
@@ -73,7 +77,8 @@ function loadScene() {
 
   // load wall mesh && textures
   objString = loadOBJText('resources/obj/wall.obj');
-  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  mesh = new Mesh(objString, material);
   mesh.create();
 
   textureSet = new Map<string, Texture>();
@@ -83,7 +88,8 @@ function loadScene() {
 
   // load models mesh & textures
   objString = loadOBJText('resources/obj/models.obj');
-  mesh = new Mesh(objString, vec3.fromValues(0, 0, 0));
+  material = new Material(1.0, 0.0, 0.0, 0.0);    
+  mesh = new Mesh(objString, material);
   mesh.create();
 
   textureSet = new Map<string, Texture>();

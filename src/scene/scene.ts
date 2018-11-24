@@ -2,6 +2,8 @@ import { vec3, vec4 } from 'gl-matrix';
 import Mesh from '../geometry/Mesh';
 import { Texture, TextureBuffer } from '../rendering/gl/Texture';
 import { KDTreeNode, buildKDTree } from './BVH';
+import ShaderProgram from '../rendering/gl/ShaderProgram';
+import { performance } from 'perf_hooks';
 
 const maxTextureSize : number = 4096;
 
@@ -48,6 +50,26 @@ export class AABB {
         return new AABB(min, max); 
     }
 
+}
+
+
+export class Material {
+    specular: number
+    diffuse: number
+    reflection: number
+    refraction: number
+    
+    constructor(specular: number, 
+                diffuse: number, 
+                reflection: number, 
+                refraction: number) {
+
+        this.specular = specular,
+        this.diffuse = diffuse,
+        this.reflection = reflection,
+        this.refraction = refraction
+
+    }
 }
 
 export class Primitive {
