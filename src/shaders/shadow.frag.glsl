@@ -52,7 +52,7 @@ void getTrianglePosition(in int index, out vec3 p0, out vec3 p1, out vec3 p2) {
     int row = index / u_SceneTexWidth;
     int col = index - row * u_SceneTexWidth;
 
-    row = row * 6;
+    row = row * 11;
 
     float u = (float(col) + 0.5) / float(u_SceneTexWidth);
     float v0 = (float(row) + 0.5) / float(u_SceneTexHeight);
@@ -68,7 +68,7 @@ vec3 getTriangleNormal(in int index) {
     int row = index / u_SceneTexWidth;
     int col = index - row * u_SceneTexWidth;
 
-    row = row * 6;
+    row = row * 11;
 
     float u = (float(col) + 0.5) / float(u_SceneTexWidth);
     float v0 = (float(row) + 3.5) / float(u_SceneTexHeight);
