@@ -36,6 +36,8 @@ class ShaderProgram {
   unifWidth: WebGLUniformLocation;
   unifHeight: WebGLUniformLocation;
 
+ unifTime: WebGLUniformLocation;
+
   unifTexUnits: Map<string, WebGLUniformLocation>;
 
   constructor(shaders: Array<Shader>) {
@@ -61,6 +63,8 @@ class ShaderProgram {
     this.unifColor = gl.getUniformLocation(this.prog, "u_Color");
     this.unifHeight = gl.getUniformLocation(this.prog, "u_Height");
     this.unifWidth  = gl.getUniformLocation(this.prog, "u_Width");
+
+    this.unifTime = gl.getUniformLocation(this.prog, "u_Time");
 
     this.unifTexUnits = new Map<string, WebGLUniformLocation>();
   }
@@ -93,6 +97,13 @@ class ShaderProgram {
     if (activeProgram !== this.prog) {
       gl.useProgram(this.prog);
       activeProgram = this.prog;
+    }
+  }
+
+  setTime(time: number) {
+    this.use();
+    if(this.unifTime != -1) {
+      gl.uniform1f(this.unifTime, time);
     }
   }
 

@@ -23,6 +23,7 @@ class DeferredPass extends ShaderProgram {
     }
     
     this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
+
 	}
 
     drawElement(camera: Camera, gbTargets: WebGLTexture[]) {
