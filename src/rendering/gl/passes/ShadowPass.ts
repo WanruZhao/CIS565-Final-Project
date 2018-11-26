@@ -34,7 +34,13 @@ class ShadowPass extends ShaderProgram {
         this.unifSceneTexHeight = gl.getUniformLocation(this.prog, "u_SceneTexHeight");
 	}
 
-    drawElement(camera: Camera, targets: WebGLTexture[], count: number, lightpos: vec4, canvas: HTMLCanvasElement, scenetexwidth: number, scenetexheight: number) {
+    drawElement(camera: Camera, 
+                targets: WebGLTexture[], 
+                count: number, 
+                lightpos: vec4, 
+                canvas: HTMLCanvasElement, 
+                scenetexwidth: number, 
+                scenetexheight: number) {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.disable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);

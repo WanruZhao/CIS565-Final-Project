@@ -18,7 +18,7 @@ import Mesh from '../../geometry/Mesh';
 
 class OpenGLRenderer {
 
-  lightPos: vec4 = vec4.fromValues(2.0, 5.0, 2.0, 1.0); // currently one light
+  lightPos: vec4 = vec4.fromValues(2.5, 5.0, 3.0, 1.0); // currently one light
 
   depthTexture: WebGLTexture; 
 
@@ -332,7 +332,8 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.reflectionTarget);
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
     }
@@ -346,7 +347,9 @@ class OpenGLRenderer {
   }
 
   reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
+    
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);

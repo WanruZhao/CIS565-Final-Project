@@ -26,11 +26,13 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 3;
+const int MAX_DEPTH = 2;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
+
+#define USE_RANDOM 0
 
 
 // light source should be mesh  OK
@@ -49,6 +51,7 @@ struct Ray{
     vec3 color;
     int remainingBounces;
     bool hitLight;
+    float accuSpecular;
 };
 
 float noise2d(float x, float y) {
@@ -234,6 +237,7 @@ Ray castRay() {
         ray.remainingBounces = MAX_DEPTH;
     }
 
+#if USE_RANDOM
     // use random number and specular prob to shoot initial ray
     float random = noise2d(fs_UV.x, fs_UV.y);
     if (random < material[0]) {
@@ -258,6 +262,23 @@ Ray castRay() {
     //     ray.color = albedo;    
     //     ray.remainingBounces = 0;
     // }
+
+
+#else
+    //==================================
+    // shoot initial ray if specular prop > 0
+    if (material[0] > 0.0) {
+        ray.direction = reflect(rayDir, worldNor);
+        ray.origin = worldPos + worldNor * EPSILON;
+        ray.color = albedo;  
+        ray.accuSpecular = material[0];
+    } else {
+        ray.color = albedo;    
+        ray.remainingBounces = 0;
+    }
+    //==================================
+#endif
+    
     
 
     // for screen pixels on light mesh: shoot ray anyway
@@ -290,7 +311,7 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
         return;
     }
 
-
+#if USE_RANDOM
     if (random < specularProp) {    // shoot specular ray
         ray.direction = reflect(ray.direction, normal);
         ray.origin = intersectionP + normal * EPSILON;
@@ -313,6 +334,23 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
 
     }
 
+#else
+
+    if (specularProp > 0.0) {
+        ray.direction = reflect(ray.direction, normal);
+        ray.origin = intersectionP + normal * EPSILON;             
+        ray.remainingBounces--;   
+    } else {
+        ray.remainingBounces = 0;
+    }
+
+
+    ray.color = (ray.color * baseColor.rgb) * ray.accuSpecular 
+                +  baseColor.rgb * (1.0 - ray.accuSpecular);
+    ray.accuSpecular *= specularProp;
+    
+
+#endif
 
 }
 
@@ -350,7 +388,7 @@ void main()
 
    vec3 albedo = texture(u_Albedo, fs_UV).xyz;
     out_Col = vec4(ray.color, 1.0);   
-    // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
+    out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
 
 
 }

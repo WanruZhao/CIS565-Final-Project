@@ -64,7 +64,7 @@ function loadScene() {
 
   // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);
+  material = new Material(0.5, 0.5, 0.0, 0.0);
   baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -190,9 +190,10 @@ function main() {
 
     renderer.renderFromGBuffer(camera);
 
-   // renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
-
     renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+    
+   renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+
 
   
     stats.end();
