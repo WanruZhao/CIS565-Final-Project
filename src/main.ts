@@ -90,7 +90,7 @@ function loadScene() {
 
   // load light mesh && textures
   objString = loadOBJText('resources/obj/light.obj');
-  material = new Material(1.0, 0.0, 0.0, 500.0);  
+  material = new Material(1.0, 0.0, 0.0, 1.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -101,9 +101,39 @@ function loadScene() {
   textureSet = null;
   scene.addSceneElement(mesh, textureSet);
 
+
+  //===========================================================
+  // // load left light mesh && textures
+  // objString = loadOBJText('resources/obj/light_left.obj');
+  // material = new Material(1.0, 0.0, 0.0, 1.0);  
+  // baseColor = vec4.fromValues(1.0, 1.0, 0.0, 1.0);  
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+
+  // // textureSet = new Map<string, Texture>();
+  // // texture = new Texture('resources/textures/wall.jpg');
+  // // textureSet.set('tex_Albedo', texture);
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
+
+  // // load right light mesh && textures
+  // objString = loadOBJText('resources/obj/light_right.obj');
+  // material = new Material(1.0, 0.0, 0.0, 1.0);  
+  // baseColor = vec4.fromValues(0.0, 1.0, 1.0, 1.0);  
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+
+  // // textureSet = new Map<string, Texture>();
+  // // texture = new Texture('resources/textures/wall.jpg');
+  // // textureSet.set('tex_Albedo', texture);
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
+  //===========================================================
+  
+
   // load models mesh & textures
   objString = loadOBJText('resources/obj/models.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  material = new Material(0.0, 1.0, 0.0, 0.0);  
   baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();

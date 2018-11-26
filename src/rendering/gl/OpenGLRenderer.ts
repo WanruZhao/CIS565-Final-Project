@@ -18,7 +18,7 @@ import Mesh from '../../geometry/Mesh';
 
 class OpenGLRenderer {
 
-  lightPos: vec4 = vec4.fromValues(5.0, 5.0, 5.0, 1.0); // currently one light
+  lightPos: vec4 = vec4.fromValues(2.0, 10.0, 0.0, 1.0); // currently one light
 
   depthTexture: WebGLTexture; 
 

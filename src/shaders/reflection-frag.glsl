@@ -37,7 +37,9 @@ vec3 missColor = vec3(0.0, 0.0, 0.0);
 // light source need to be hard coded in shader
 // in out problem
 // reflection ray intersects with non-reflective triangle??
-
+// hit no triangle/hit no light: set to missColor or not???
+// when shoot rays from gbuffer, need to set hitLight to true for light mesh
+// three conditions: hit light, hit outside, hit triangles but not light
 
 struct Ray{
     vec3 origin;
@@ -216,16 +218,17 @@ Ray castRay() {
     ray.hitLight = false;
     ray.remainingBounces = MAX_DEPTH;    
     
+
+    // ray.direction = rayDir;
+    // ray.origin = u_Camera;    
+    // ray.color = vec3(1.0);
+
     vec3 worldPos = texture(u_Pos, fs_UV).xyz;
     vec3 worldNor = texture(u_Nor, fs_UV).xyz;
     vec3 albedo = texture(u_Albedo, fs_UV).xyz;
     ray.direction = reflect(rayDir, worldNor);
     ray.origin = worldPos + worldNor * EPSILON;
     ray.color = albedo;
-
-    // ray.direction = rayDir;
-    // ray.origin = u_Camera;    
-    // ray.color = vec3(1.0);
 
     // for screen pixels where no geometry
     if (length(worldNor) <= 0.0) {
@@ -253,8 +256,8 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
     if (emittance > 0.0) {
         ray.remainingBounces = 0;   
         ray.hitLight = true; 
-        ray.color *= (baseColor.xyz * emittance);        
-        
+        ray.color *= (baseColor.xyz * emittance);    
+    
         return;
     }
 
@@ -283,7 +286,7 @@ void raytrace(inout Ray ray) {
     if (intersectionCheck(ray, triangleIdx, intersectionP)) {        
         shadeRay(triangleIdx, intersectionP, ray);
     } else {
-        ray.color = missColor;
+        // ray.color = missColor;
         ray.remainingBounces = 0;
     }
 }
@@ -293,32 +296,23 @@ void raytrace(inout Ray ray) {
 
 void main()
 {
+   float ambient_term = 0.5;    
     
    Ray ray = castRay();
+   out_Col = vec4(1.0);
 
-   // depth iteration
-   for (int i = 0; i < MAX_DEPTH; ++i) {
-        // termination check       
-       if (ray.remainingBounces <= 0) {
-            if (!ray.hitLight) {
-                ray.color = missColor;   
-            }
-            break;
-        }
+   while (ray.remainingBounces > 0) {
         raytrace(ray);
    }
 
-    // vec2 uv = vec2(gl_FragCoord.x / u_Width, gl_FragCoord.y / u_Height);
-    // vec3 albedo = texture(u_Albedo, uv).xyz;
+   if (!ray.hitLight) {
+    //    ray.color = missColor;
+        ray.color *= ambient_term;  // add ambien term manually
+   }
 
-    // if (ray.color.x == 0.0 && ray.color.y == 0.0 && ray.color.z == 0.0) {
-    //     out_Col = vec4(albedo, 1.0);
-    // } else {
-    //     out_Col = vec4(ray.color, 1.0);
-
-    // }
-
-    out_Col = vec4(ray.color, 1.0);
+   vec3 albedo = texture(u_Albedo, fs_UV).xyz;
+    out_Col = vec4(ray.color, 1.0);   
+    // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);
     
 
 
