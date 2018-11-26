@@ -58,10 +58,7 @@ class OpenGLRenderer {
 
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
-    this.gbTargets = [undefined, undefined, undefined];  // 3 gbuffer texture for now
-
-    // this.post8Buffers = [undefined, undefined];  // 2 buffers for now
-    // this.post8Targets = [undefined, undefined];
+    this.gbTargets = [undefined, undefined, undefined, undefined];  // 4 gbuffer texture for now
 
     // set up gBufferPass    
     this.gBufferPass = new GBufferPass(require('../../shaders/standard-vert.glsl'), 
@@ -74,11 +71,15 @@ class OpenGLRenderer {
     var gb0loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb0");
     var gb1loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb1");
     var gb2loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb2");
+    var gb3loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb3");
+    
 
     this.deferredPass.use();
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
+    gl.uniform1i(gb3loc, 3);
+    
 
     // set up raycast pass
     this.raycastPass = new RaycastPass(require('../../shaders/screenspace-vert.glsl'),
@@ -105,14 +106,16 @@ class OpenGLRenderer {
 
     this.reflectionPass.unifPos = gl.getUniformLocation(this.reflectionPass.prog, "u_Pos");
     this.reflectionPass.unifNor = gl.getUniformLocation(this.reflectionPass.prog, "u_Nor");
-    this.reflectionPass.unifAlbedo = gl.getUniformLocation(this.reflectionPass.prog, "u_Albedo");    
+    this.reflectionPass.unifAlbedo = gl.getUniformLocation(this.reflectionPass.prog, "u_Albedo");  
+    this.reflectionPass.unifMaterial = gl.getUniformLocation(this.reflectionPass.prog, "u_Material");          
     this.reflectionPass.unifSceneInfo = gl.getUniformLocation(this.reflectionPass.prog, "u_SceneInfo");
 
     this.reflectionPass.use();
     gl.uniform1i(this.reflectionPass.unifPos, 0);
     gl.uniform1i(this.reflectionPass.unifNor, 1);
     gl.uniform1i(this.reflectionPass.unifAlbedo, 2);
-    gl.uniform1i(this.reflectionPass.unifSceneInfo, 3);
+    gl.uniform1i(this.reflectionPass.unifMaterial, 3);    
+    gl.uniform1i(this.reflectionPass.unifSceneInfo, 4);
     
 
     if (!gl.getExtension("OES_texture_float_linear")) {
@@ -140,7 +143,7 @@ class OpenGLRenderer {
     // --- GBUFFER CREATION START ---
     this.gBuffer = gl.createFramebuffer();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);
-    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2]);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3]);
 
     for (let i = 0; i < this.gbTargets.length; i ++) {
       this.gbTargets[i] = gl.createTexture();
@@ -298,6 +301,11 @@ class OpenGLRenderer {
         this.gBufferPass.setUseTexture(0);
       }
 
+      this.gBufferPass.setMaterial(meshes[i].material.specular, 
+                                  meshes[i].material.diffuse, 
+                                  meshes[i].material.refraction, 
+                                  meshes[i].material.emittance);
+
       this.gBufferPass.drawElements(camera, [meshes[i]]);
     }
 
@@ -343,6 +351,8 @@ class OpenGLRenderer {
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
     textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.gbTargets[3]);
+    
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
     }

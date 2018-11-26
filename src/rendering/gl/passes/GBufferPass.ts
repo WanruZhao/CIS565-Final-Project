@@ -8,6 +8,8 @@ import Texture from '../Texture';
 class GBufferPass extends ShaderProgram {
 
 	unifUseTexture: WebGLUniformLocation;
+	unifMaterial: WebGLUniformLocation;
+	
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
@@ -16,6 +18,8 @@ class GBufferPass extends ShaderProgram {
 		this.use();
 
 		this.unifUseTexture = gl.getUniformLocation(this.prog, "u_UseTexture");
+		this.unifMaterial = gl.getUniformLocation(this.prog, "u_Material");
+		
 
 	}
 
@@ -26,9 +30,9 @@ class GBufferPass extends ShaderProgram {
 		// setup matrices
 		let model = mat4.create();
 		mat4.identity(model);    
-			let viewProj = mat4.create();
-			let view = camera.viewMatrix;
-			let proj = camera.projectionMatrix;
+		let viewProj = mat4.create();
+		let view = camera.viewMatrix;
+		let proj = camera.projectionMatrix;
 		
 		mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
 		this.setModelMatrix(model);
@@ -43,10 +47,17 @@ class GBufferPass extends ShaderProgram {
 	
 	  }
 	  
-	  setUseTexture(ifUseTexture: number) {
+	setUseTexture(ifUseTexture: number) {
 		this.use();
 		if(this.unifUseTexture != -1) {
 			gl.uniform1i(this.unifUseTexture, ifUseTexture);
+		}
+	}
+
+	setMaterial(specular: number, diffuse: number, refraction: number, emittance: number) {
+		this.use();
+		if(this.unifMaterial != -1) {
+			gl.uniform4fv(this.unifMaterial, vec4.fromValues(specular, diffuse, refraction, emittance));
 		}
 	}
 

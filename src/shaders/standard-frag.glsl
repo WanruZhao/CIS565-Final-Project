@@ -8,7 +8,7 @@ in vec2 fs_UV;
 in vec4 fs_WorldPos;
 in vec3 fs_Nor_world_space;
 
-out vec4 fragColor[3]; // The data in the ith index of this array of outputs
+out vec4 fragColor[4]; // The data in the ith index of this array of outputs
                        // is passed to the ith index of OpenGLRenderer's
                        // gbTargets array, which is an array of textures.
                        // This lets us output different types of data,
@@ -18,6 +18,7 @@ out vec4 fragColor[3]; // The data in the ith index of this array of outputs
 uniform sampler2D tex_Albedo;
 uniform vec4 u_Color;
 uniform int u_UseTexture;
+uniform vec4 u_Material;
 
 
 void main() {
@@ -46,5 +47,8 @@ void main() {
     // fragColor[2] : RGBA 32 bits buffer
     // albedo.x | albedo.y | albedo.z | ...
     fragColor[2] = vec4(col, 1.0);
+    
+    // store material information.  specular | deffuse | refraction | emittance
+    fragColor[3] = u_Material;
 
 }

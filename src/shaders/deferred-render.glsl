@@ -7,6 +7,8 @@ out vec4 out_Col;
 uniform sampler2D u_gb0;
 uniform sampler2D u_gb1;
 uniform sampler2D u_gb2;
+uniform sampler2D u_gb3;
+
 
 uniform float u_Height;
 uniform float u_Width;
@@ -22,6 +24,8 @@ void main() {
 	vec4 col_0 = texture(u_gb0, fs_UV);
 	vec4 col_1 = texture(u_gb1, fs_UV);
 	vec4 col_2 = texture(u_gb2, fs_UV);
+	vec4 col_3 = texture(u_gb3, fs_UV);
+	
 
 	vec3 dynamiclightpos = u_LightPos.xyz;
 	dynamiclightpos.x *= sin(u_Time);

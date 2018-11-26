@@ -11,6 +11,7 @@ class ReflectionPass extends ShaderProgram {
     unifPos: WebGLUniformLocation;
     unifNor: WebGLUniformLocation;
     unifAlbedo: WebGLUniformLocation;
+    unifMaterial: WebGLUniformLocation;    
     unifSceneInfo: WebGLUniformLocation;
     unifTriangleCount: WebGLUniformLocation;
     unifLightPos: WebGLUniformLocation;

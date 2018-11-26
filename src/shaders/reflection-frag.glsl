@@ -4,6 +4,8 @@ precision highp float;
 uniform sampler2D u_Pos;
 uniform sampler2D u_Nor;
 uniform sampler2D u_Albedo;
+uniform sampler2D u_Material;
+
 uniform sampler2D u_SceneInfo; // extend to multiple textures
 uniform int u_SceneTexWidth; // extend to multiple size
 uniform int u_SceneTexHeight; // extend to multiple size
@@ -24,7 +26,7 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 2;
+const int MAX_DEPTH = 4;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 
@@ -217,24 +219,26 @@ Ray castRay() {
     vec3 rayDir = normalize(pixelWorldPos.xyz - u_Camera); 
     ray.hitLight = false;
     ray.remainingBounces = MAX_DEPTH;    
-    
 
-    // ray.direction = rayDir;
-    // ray.origin = u_Camera;    
-    // ray.color = vec3(1.0);
 
     vec3 worldPos = texture(u_Pos, fs_UV).xyz;
     vec3 worldNor = texture(u_Nor, fs_UV).xyz;
     vec3 albedo = texture(u_Albedo, fs_UV).xyz;
+    vec4 material = texture(u_Material, fs_UV);
     ray.direction = reflect(rayDir, worldNor);
     ray.origin = worldPos + worldNor * EPSILON;
     ray.color = albedo;
 
-    // for screen pixels where no geometry
-    if (length(worldNor) <= 0.0) {
+    // for screen pixels where no geometry and non-reflective
+    if (length(worldNor) <= 0.0 || material[0] <= 0.0) {
         ray.remainingBounces = 0;
     } else {
         ray.remainingBounces = MAX_DEPTH;
+    }
+
+    // for screen pixels on light mesh
+    if (material[3] > 0.0) {
+        ray.color *= material[3];
     }
     
 
@@ -311,9 +315,8 @@ void main()
    }
 
    vec3 albedo = texture(u_Albedo, fs_UV).xyz;
-    out_Col = vec4(ray.color, 1.0);   
-    // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);
+    // out_Col = vec4(ray.color, 1.0);   
+    out_Col = vec4((ray.color + albedo) * 0.5, 1.0);
     
-
 
 }
