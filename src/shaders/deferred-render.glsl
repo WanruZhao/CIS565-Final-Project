@@ -33,6 +33,6 @@ void main() {
 	float lambert = clamp(dot(normalize(col_0.xyz), normalize(dynamiclightpos- col_1.xyz)), 0.4, 1.0);
 	// lambert = 1.0;
 	
-	out_Col = vec4(col_2.rgb * lambert, 1.0);
+	out_Col = vec4(col_2.rgb * lambert * 1.5, 1.0);
 	
 }

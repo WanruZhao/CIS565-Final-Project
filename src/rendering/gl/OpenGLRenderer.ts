@@ -347,8 +347,8 @@ class OpenGLRenderer {
   }
 
   reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
     
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);

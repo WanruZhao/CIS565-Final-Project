@@ -122,7 +122,7 @@ void main()
     float t = 10.0;
     vec4 col = texture(u_Albedo, pixel);
     if(isHit(raydir, rayorigin, t)) {
-        out_Col = vec4(col.xyz * 0.7, 1.0);
+        out_Col = vec4(col.xyz * 0.5, 1.0);
     } else {
         out_Col = col;
     }

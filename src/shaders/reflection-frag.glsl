@@ -70,6 +70,20 @@ vec3 calculateRandomDirectionInHemisphere(vec3 normal) {
     return randomV;
 }
 
+vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3, 
+                    in vec2 uv1, in vec2 uv2, in vec2 uv3,
+                    vec3 p) {
+    float s = length(cross(p1 - p2, p3 - p2)) / 2.0;
+    float s1 = length(cross(p - p2, p3 - p2)) / 2.0;
+    float s2 = length(cross(p - p3, p1 - p3)) / 2.0;
+    float s3 = length(cross(p - p1, p2 - p1)) / 2.0;
+
+    vec2 p_uv = uv1 * s1 / s + uv2 * s2 / s + uv3 * s3 / s;
+    return p_uv;
+    
+
+}
+
 void getTrianglePosition(in int index, out vec3 p0, out vec3 p1, out vec3 p2) {
     int row = index / u_SceneTexWidth;
     int col = index - row * u_SceneTexWidth;
@@ -296,6 +310,14 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
     vec4 material = getTriangleMaterial(triangleIdx);
     vec4 baseColor = getTriangleBaseColor(triangleIdx);
 
+    // for texture reflection==========
+    // vec3 p1, p2, p3;
+    // vec2 uv1, uv2, uv3;
+    // getTrianglePosition(triangleIdx, p1, p2, p3);
+    // getTriangleUV(triangleIdx, uv1, uv2, uv3);
+    // vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+    // vec4 textureColor = 
+
     float random = noise2d(fs_UV.x, fs_UV.y);  
     float specularProp = material[0];
     float diffuseProp = material[1];    
@@ -319,15 +341,15 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
         ray.remainingBounces--;   
         
     } else if (random < specularProp + diffuseProp) {  // shoot a diffuse ray 
-        // // shoot a diffuse ray    
-        // ray.direction = calculateRandomDirectionInHemisphere(normal);
-        // ray.origin = intersectionP + normal * EPSILON;
-        // ray.color *= baseColor.xyz;                
-        // ray.remainingBounces--;   
+        // shoot a diffuse ray    
+        ray.direction = calculateRandomDirectionInHemisphere(normal);
+        ray.origin = intersectionP + normal * EPSILON;
+        ray.color *= baseColor.xyz;                
+        ray.remainingBounces--;   
 
-        // terminate reflection difrectly 
-        ray.color *= baseColor.xyz;     
-        ray.remainingBounces = 0;   
+        // // terminate reflection difrectly 
+        // ray.color *= baseColor.xyz;     
+        // ray.remainingBounces = 0;   
 
     } else {
         ray.remainingBounces = 0;      
@@ -346,7 +368,7 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
 
 
     ray.color = (ray.color * baseColor.rgb) * ray.accuSpecular 
-                +  baseColor.rgb * (1.0 - ray.accuSpecular);
+                +  ray.color * (1.0 - ray.accuSpecular);
     ray.accuSpecular *= specularProp;
     
 
@@ -388,7 +410,7 @@ void main()
 
    vec3 albedo = texture(u_Albedo, fs_UV).xyz;
     out_Col = vec4(ray.color, 1.0);   
-    out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
+    // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
 
 
 }
