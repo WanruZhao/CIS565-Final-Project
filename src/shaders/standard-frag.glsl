@@ -16,6 +16,8 @@ out vec4 fragColor[3]; // The data in the ith index of this array of outputs
                        // separate images from a single render pass.
 
 uniform sampler2D tex_Albedo;
+uniform vec4 u_Color;
+uniform int u_UseTexture;
 
 
 void main() {
@@ -23,7 +25,12 @@ void main() {
     // Presently, the provided shader passes "nothing" to the first
     // two gbuffers and basic color to the third.
 
-    vec3 col = texture(tex_Albedo, fs_UV).rgb;
+    vec3 col;
+    if (u_UseTexture == 1) {
+        col = texture(tex_Albedo, fs_UV).rgb;
+    } else {
+        col = u_Color.xyz;
+    }
 
 
     // if using textures, inverse gamma correct

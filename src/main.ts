@@ -1,4 +1,4 @@
-import {vec3, vec4, mat4} from 'gl-matrix';
+import {vec2, vec3, vec4, mat4} from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Mesh from './geometry/Mesh';
@@ -62,43 +62,56 @@ function loadScene() {
   let material;
   let baseColor;
 
-
-
-
   // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
-  material = new Material(1.0, 0.0, 0.0);
-  baseColor = vec4.fromValues(0.3, 0.3, 0.3, 1.0);
+  material = new Material(1.0, 0.0, 0.0, 0.0);
+  baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
 
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/marble.jpg');
-  textureSet.set('tex_Albedo', texture);
+  // textureSet = new Map<string, Texture>();
+  // texture = new Texture('resources/textures/marble.jpg');
+  // textureSet.set('tex_Albedo', texture);
+  textureSet = null;
   scene.addSceneElement(mesh, textureSet);
 
   // load wall mesh && textures
   objString = loadOBJText('resources/obj/wall.obj');
-  material = new Material(1.0, 0.0, 0.0);  
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
   baseColor = vec4.fromValues(0.8, 0.8, 0.8, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
 
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/wall.jpg');
-  textureSet.set('tex_Albedo', texture);
+  // textureSet = new Map<string, Texture>();
+  // texture = new Texture('resources/textures/wall.jpg');
+  // textureSet.set('tex_Albedo', texture);
+  textureSet = null;
+  scene.addSceneElement(mesh, textureSet);
+
+  // load light mesh && textures
+  objString = loadOBJText('resources/obj/light.obj');
+  material = new Material(1.0, 0.0, 0.0, 500.0);  
+  baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);  
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+
+  // textureSet = new Map<string, Texture>();
+  // texture = new Texture('resources/textures/wall.jpg');
+  // textureSet.set('tex_Albedo', texture);
+  textureSet = null;
   scene.addSceneElement(mesh, textureSet);
 
   // load models mesh & textures
   objString = loadOBJText('resources/obj/models.obj');
-  material = new Material(1.0, 0.0, 0.0);  
-  baseColor = vec4.fromValues(0.7, 0.3, 0.3, 1.0);    
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
 
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/ice.jpg');
-  textureSet.set('tex_Albedo', texture);
+  // textureSet = new Map<string, Texture>();
+  // texture = new Texture('resources/textures/ice.jpg');
+  // textureSet.set('tex_Albedo', texture);
+  textureSet = null;
   scene.addSceneElement(mesh, textureSet);
 
 
@@ -132,7 +145,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 2, 10), vec3.fromValues(0, 2, 0));
+  const camera = new Camera(vec3.fromValues(0, 2, 30), vec3.fromValues(0, 2, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0, 0, 0, 1);
@@ -165,7 +178,7 @@ function main() {
     stats.begin();
     gl.viewport(0, 0, window.innerWidth, window.innerHeight);
     timer.updateTime();
-    renderer.updateTime(timer.deltaTime, timer.currentTime);
+    // renderer.updateTime(timer.deltaTime, timer.currentTime);
 
     renderer.clear();
     renderer.clearGB();
@@ -176,7 +189,9 @@ function main() {
 
     renderer.renderFromGBuffer(camera);
 
-    renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+    // renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+
+    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount);
 
   
     stats.end();

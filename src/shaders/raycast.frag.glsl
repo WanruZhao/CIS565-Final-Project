@@ -16,10 +16,12 @@ void main()
 {
     // convert pixel position from screen space to world space
     // calculate ray direction from camera position and pixel position
+    vec4 NDC = vec4(0.0, 0.0, 1.0, 1.0);
+    // lower left corner is (0, 0) for Frag_Coord
+    NDC.x = (gl_FragCoord.x / u_Width) * 2.0 - 1.0;
+    NDC.y = (gl_FragCoord.y / u_Height) * 2.0 - 1.0;
 
-    vec2 pixel = fs_UV;
-
-    vec4 worldPos = u_ViewInv * u_ProjInv * (vec4(pixel, 1.0, 1.0) * u_Far);
+    vec4 worldPos = u_ViewInv * u_ProjInv * (NDC * u_Far);
 
     vec3 rayDir = normalize(worldPos.xyz - u_Camera);
     

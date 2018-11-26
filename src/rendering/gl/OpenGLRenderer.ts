@@ -12,6 +12,9 @@ import RaycastPass from './passes/RaycastPass';
 import ShadowPass from './passes/ShadowPass';
 import { debug } from 'util';
 import { reverse } from 'dns';
+import ReflectionPass from './passes/ReflectionPass';
+import { Material } from '../../scene/scene';
+import Mesh from '../../geometry/Mesh';
 
 class OpenGLRenderer {
 
@@ -47,6 +50,11 @@ class OpenGLRenderer {
   shadowPass: ShadowPass;
   shadowBuffer: WebGLFramebuffer;
   shadowTarget: WebGLTexture;
+
+  // shadow pass
+  reflectionPass: ReflectionPass;
+  reflectionBuffer: WebGLFramebuffer;
+  reflectionTarget: WebGLTexture;
 
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
@@ -90,6 +98,21 @@ class OpenGLRenderer {
     gl.uniform1i(this.shadowPass.unifNor, 1);
     gl.uniform1i(this.shadowPass.unifAlbedo, 2);
     gl.uniform1i(this.shadowPass.unifSceneInfo, 3);
+
+    // set up reflection pass
+    this.reflectionPass = new ReflectionPass(require('../../shaders/screenspace-vert.glsl'),
+                                              require('../../shaders/reflection-frag.glsl'));
+
+    this.reflectionPass.unifPos = gl.getUniformLocation(this.reflectionPass.prog, "u_Pos");
+    this.reflectionPass.unifNor = gl.getUniformLocation(this.reflectionPass.prog, "u_Nor");
+    this.reflectionPass.unifAlbedo = gl.getUniformLocation(this.reflectionPass.prog, "u_Albedo");    
+    this.reflectionPass.unifSceneInfo = gl.getUniformLocation(this.reflectionPass.prog, "u_SceneInfo");
+
+    this.reflectionPass.use();
+    gl.uniform1i(this.reflectionPass.unifPos, 0);
+    gl.uniform1i(this.reflectionPass.unifNor, 1);
+    gl.uniform1i(this.reflectionPass.unifAlbedo, 2);
+    gl.uniform1i(this.reflectionPass.unifSceneInfo, 3);
     
 
     if (!gl.getExtension("OES_texture_float_linear")) {
@@ -211,6 +234,21 @@ class OpenGLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.shadowTarget, 0);
 
+    // reflection
+    this.reflectionBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.reflectionTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.reflectionTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.reflectionTarget, 0);
+
+
     FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
       console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
@@ -240,39 +278,27 @@ class OpenGLRenderer {
   }
 
 
-  renderToGBuffer(camera: Camera, drawables: Array<Drawable>, textureSets: Array<Map<string, Texture>>) {    
+  renderToGBuffer(camera: Camera, meshes: Array<Mesh>, textureSets: Array<Map<string, Texture>>) {    
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.gBuffer);   
 
-    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-		gl.enable(gl.DEPTH_TEST);
-  
-    // setup matrices
-    let model = mat4.create();
-    mat4.identity(model);    
-		let viewProj = mat4.create();
-		let view = camera.viewMatrix;
-		let proj = camera.projectionMatrix;
-    let color = vec4.fromValues(0.5, 0.5, 0.5, 1);
-    
-    mat4.multiply(viewProj, camera.projectionMatrix, camera.viewMatrix);
-		this.gBufferPass.setModelMatrix(model);
-		this.gBufferPass.setViewProjMatrix(viewProj);
-		this.gBufferPass.setGeometryColor(color);
-		this.gBufferPass.setViewMatrix(view);
-		this.gBufferPass.setProjMatrix(proj);
-
-
-    for (let i = 0; i < drawables.length; ++i) {
+    for (let i = 0; i < meshes.length; ++i) {
       // setup textures 
       let textureSet = textureSets[i];
-      let j = 0;
-      for (let [name, tex] of textureSet) {
-        this.gBufferPass.setupTexUnits([name]);
-        this.gBufferPass.bindTexToUnit(name, tex, j);
-        j++;
+      if (textureSet) {
+        let j = 0;
+        for (let [name, tex] of textureSet) {
+          this.gBufferPass.setupTexUnits([name]);
+          this.gBufferPass.bindTexToUnit(name, tex, j);
+          j++;
+        }
+        this.gBufferPass.setUseTexture(1);
+      
+      } else {
+        this.gBufferPass.setGeometryColor(meshes[i].baseColor);
+        this.gBufferPass.setUseTexture(0);
       }
 
-      this.gBufferPass.drawElements(camera, [drawables[i]]);
+      this.gBufferPass.drawElements(camera, [meshes[i]]);
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -306,6 +332,24 @@ class OpenGLRenderer {
     this.shadowPass.setViewMatrix(camera.viewMatrix);
 
     this.shadowPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  }
+
+  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    let textures: WebGLTexture[] = [];
+    textures.push(this.gbTargets[1]);
+    textures.push(this.gbTargets[0]);
+    textures.push(this.originalTargetFromGBuffer);
+    for(let i = 0; i < sceneInfo.length; i++) {
+      textures.push(sceneInfo[i].texture);
+    }
+
+    this.reflectionPass.setViewMatrix(camera.viewMatrix);
+
+    this.reflectionPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

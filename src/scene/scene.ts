@@ -66,15 +66,17 @@ export class Material {
     specular: number
     diffuse: number
     refraction: number
+    emittance: number
 
     
     constructor(specular: number, 
                 diffuse: number, 
-                refraction: number) {
-        this.specular = specular,
-        this.diffuse = diffuse,
-        this.refraction = refraction
-
+                refraction: number,
+                emittance: number) {
+        this.specular = specular;
+        this.diffuse = diffuse;
+        this.refraction = refraction;
+        this.emittance = emittance;
     }
 }
 
@@ -210,6 +212,8 @@ export class Scene {
                 this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 0)] = this.meshes[i].material.specular;
                 this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 1)] = this.meshes[i].material.diffuse;
                 this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 2)] = this.meshes[i].material.refraction;
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 3)] = this.meshes[i].material.emittance;
+                
             }
             currentCount = currentCount + this.meshes[i].count / 3;
         }
