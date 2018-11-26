@@ -32,7 +32,7 @@ const float FLT_MAX = 1000000.0;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
-#define USE_RANDOM 0
+#define USE_RANDOM 1
 
 
 // light source should be mesh  OK
@@ -341,15 +341,15 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
         ray.remainingBounces--;   
         
     } else if (random < specularProp + diffuseProp) {  // shoot a diffuse ray 
-        // shoot a diffuse ray    
-        ray.direction = calculateRandomDirectionInHemisphere(normal);
-        ray.origin = intersectionP + normal * EPSILON;
-        ray.color *= baseColor.xyz;                
-        ray.remainingBounces--;   
+        // // shoot a diffuse ray    
+        // ray.direction = calculateRandomDirectionInHemisphere(normal);
+        // ray.origin = intersectionP + normal * EPSILON;
+        // ray.color *= baseColor.xyz;                
+        // ray.remainingBounces--;   
 
-        // // terminate reflection difrectly 
-        // ray.color *= baseColor.xyz;     
-        // ray.remainingBounces = 0;   
+        // terminate reflection difrectly 
+        ray.color *= baseColor.xyz;     
+        ray.remainingBounces = 0;   
 
     } else {
         ray.remainingBounces = 0;      
@@ -395,6 +395,8 @@ void raytrace(inout Ray ray) {
 void main()
 {   
    vec3 ambientLight = vec3(0.5, 0.5, 0.5); 
+   vec3 albedo = texture(u_Albedo, fs_UV).xyz;
+   
     
    Ray ray = castRay();   
 
@@ -403,12 +405,11 @@ void main()
    }
 
    if (!ray.hitLight) {
-    //    ray.color = missColor;
+    //    ray.color = albedo;
         ray.color *= ambientLight;  // add ambien light manually
    }
     
 
-   vec3 albedo = texture(u_Albedo, fs_UV).xyz;
     out_Col = vec4(ray.color, 1.0);   
     // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
 
