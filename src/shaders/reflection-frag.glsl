@@ -26,7 +26,7 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 4;
+const int MAX_DEPTH = 3;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 
@@ -204,6 +204,7 @@ bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 intersectionP) 
         return false;
     }
 
+
 }
 
 // pay attention to rays that didnt hit anything----------------
@@ -217,30 +218,54 @@ Ray castRay() {
 
     vec4 pixelWorldPos = u_ViewInv * u_ProjInv * (NDC * u_Far);
     vec3 rayDir = normalize(pixelWorldPos.xyz - u_Camera); 
-    ray.hitLight = false;
-    ray.remainingBounces = MAX_DEPTH;    
-
 
     vec3 worldPos = texture(u_Pos, fs_UV).xyz;
     vec3 worldNor = texture(u_Nor, fs_UV).xyz;
     vec3 albedo = texture(u_Albedo, fs_UV).xyz;
     vec4 material = texture(u_Material, fs_UV);
-    ray.direction = reflect(rayDir, worldNor);
-    ray.origin = worldPos + worldNor * EPSILON;
-    ray.color = albedo;
+
+    ray.hitLight = false;
+    ray.remainingBounces = MAX_DEPTH;    
 
     // for screen pixels where no geometry and non-reflective
-    if (length(worldNor) <= 0.0 || material[0] <= 0.0) {
+    if (length(worldNor) <= 0.0) {
         ray.remainingBounces = 0;
-    } else {
+    } else {        
         ray.remainingBounces = MAX_DEPTH;
     }
 
-    // for screen pixels on light mesh
-    if (material[3] > 0.0) {
-        ray.color *= material[3];
+    // use random number and specular prob to shoot initial ray
+    float random = noise2d(fs_UV.x, fs_UV.y);
+    if (random < material[0]) {
+        ray.direction = reflect(rayDir, worldNor);
+        ray.origin = worldPos + worldNor * EPSILON;
+        ray.color = albedo;    
+    } else if (random < material[0] + material[1]) {
+        ray.color = albedo;    
+        ray.remainingBounces = 0;
+    } else {
+        ray.color = albedo;    
+        ray.remainingBounces = 0;
+
     }
+
+    // // shoot initial ray if specular prop > 0
+    // if (material[0] > 0.0) {
+    //     ray.direction = reflect(rayDir, worldNor);
+    //     ray.origin = worldPos + worldNor * EPSILON;
+    //     ray.color = albedo;  
+    // } else {
+    //     ray.color = albedo;    
+    //     ray.remainingBounces = 0;
+    // }
     
+
+    // for screen pixels on light mesh: shoot ray anyway
+    if (material[3] > 0.0) {
+        ray.color = albedo * material[3];  
+        ray.direction = reflect(rayDir, worldNor);
+        ray.origin = worldPos + worldNor * EPSILON;
+    }
 
     return ray;
 }
@@ -265,29 +290,38 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
         return;
     }
 
+
     if (random < specularProp) {    // shoot specular ray
         ray.direction = reflect(ray.direction, normal);
         ray.origin = intersectionP + normal * EPSILON;
         ray.color *= baseColor.xyz;                
         ray.remainingBounces--;   
         
-    } else if (random < diffuseProp) {  // shoot a diffuse ray    
-        ray.direction = calculateRandomDirectionInHemisphere(normal);
-        ray.origin = intersectionP + normal * EPSILON;
-        ray.color *= baseColor.xyz;                
-        ray.remainingBounces--;   
-         
-        // ray.remainingBounces = 0;    
+    } else if (random < specularProp + diffuseProp) {  // shoot a diffuse ray 
+        // // shoot a diffuse ray    
+        // ray.direction = calculateRandomDirectionInHemisphere(normal);
+        // ray.origin = intersectionP + normal * EPSILON;
+        // ray.color *= baseColor.xyz;                
+        // ray.remainingBounces--;   
+
+        // terminate reflection difrectly 
+        ray.color *= baseColor.xyz;     
+        ray.remainingBounces = 0;   
+
+    } else {
+        ray.remainingBounces = 0;      
 
     }
+
 
 }
 
 void raytrace(inout Ray ray) {
     int triangleIdx = -1;
     vec3 intersectionP = vec3(0.0);
+    
     // if hit any triangle
-    if (intersectionCheck(ray, triangleIdx, intersectionP)) {        
+    if (intersectionCheck(ray, triangleIdx, intersectionP)) {                
         shadeRay(triangleIdx, intersectionP, ray);
     } else {
         // ray.color = missColor;
@@ -299,24 +333,24 @@ void raytrace(inout Ray ray) {
 
 
 void main()
-{
-   float ambient_term = 0.5;    
+{   
+   vec3 ambientLight = vec3(0.5, 0.5, 0.5); 
     
-   Ray ray = castRay();
-   out_Col = vec4(1.0);
+   Ray ray = castRay();   
 
-   while (ray.remainingBounces > 0) {
+   while (ray.remainingBounces > 0) {       
         raytrace(ray);
    }
 
    if (!ray.hitLight) {
     //    ray.color = missColor;
-        ray.color *= ambient_term;  // add ambien term manually
+        ray.color *= ambientLight;  // add ambien light manually
    }
+    
 
    vec3 albedo = texture(u_Albedo, fs_UV).xyz;
-    // out_Col = vec4(ray.color, 1.0);   
-    out_Col = vec4((ray.color + albedo) * 0.5, 1.0);
-    
+    out_Col = vec4(ray.color, 1.0);   
+    // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
+
 
 }

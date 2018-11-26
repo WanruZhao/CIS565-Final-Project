@@ -77,7 +77,7 @@ function loadScene() {
 
   // load wall mesh && textures
   objString = loadOBJText('resources/obj/wall.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  material = new Material(0.0, 1.0, 0.0, 0.0);  
   baseColor = vec4.fromValues(0.8, 0.8, 0.8, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -90,7 +90,7 @@ function loadScene() {
 
   // load light mesh && textures
   objString = loadOBJText('resources/obj/light.obj');
-  material = new Material(1.0, 0.0, 0.0, 5.0);  
+  material = new Material(0.0, 1.0, 0.0, 1.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -100,40 +100,11 @@ function loadScene() {
   // textureSet.set('tex_Albedo', texture);
   textureSet = null;
   scene.addSceneElement(mesh, textureSet);
-
-
-  //===========================================================
-  // // load left light mesh && textures
-  // objString = loadOBJText('resources/obj/light_left.obj');
-  // material = new Material(1.0, 0.0, 0.0, 1.0);  
-  // baseColor = vec4.fromValues(1.0, 1.0, 0.0, 1.0);  
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-
-  // // textureSet = new Map<string, Texture>();
-  // // texture = new Texture('resources/textures/wall.jpg');
-  // // textureSet.set('tex_Albedo', texture);
-  // textureSet = null;
-  // scene.addSceneElement(mesh, textureSet);
-
-  // // load right light mesh && textures
-  // objString = loadOBJText('resources/obj/light_right.obj');
-  // material = new Material(1.0, 0.0, 0.0, 1.0);  
-  // baseColor = vec4.fromValues(0.0, 1.0, 1.0, 1.0);  
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-
-  // // textureSet = new Map<string, Texture>();
-  // // texture = new Texture('resources/textures/wall.jpg');
-  // // textureSet.set('tex_Albedo', texture);
-  // textureSet = null;
-  // scene.addSceneElement(mesh, textureSet);
-  //===========================================================
   
 
   // load models mesh & textures
   objString = loadOBJText('resources/obj/models.obj');
-  material = new Material(0.0, 1.0, 0.0, 0.0);  
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
   baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -175,7 +146,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(0, 2, 30), vec3.fromValues(0, 2, 0));
+  const camera = new Camera(vec3.fromValues(10, 5, 30), vec3.fromValues(0, 5, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0, 0, 0, 1);
@@ -219,7 +190,7 @@ function main() {
 
     renderer.renderFromGBuffer(camera);
 
-    // renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+   // renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
 
     renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount);
 
