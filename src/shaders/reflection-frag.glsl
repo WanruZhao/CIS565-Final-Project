@@ -32,7 +32,7 @@ const float FLT_MAX = 1000000.0;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
-#define USE_RANDOM 1
+#define USE_RANDOM 0
 
 
 // light source should be mesh  OK
@@ -251,35 +251,7 @@ Ray castRay() {
         ray.remainingBounces = MAX_DEPTH;
     }
 
-#if USE_RANDOM
-    // use random number and specular prob to shoot initial ray
-    float random = noise2d(fs_UV.x, fs_UV.y);
-    if (random < material[0]) {
-        ray.direction = reflect(rayDir, worldNor);
-        ray.origin = worldPos + worldNor * EPSILON;
-        ray.color = albedo;    
-    } else if (random < material[0] + material[1]) {
-        ray.color = albedo;    
-        ray.remainingBounces = 0;
-    } else {
-        ray.color = albedo;    
-        ray.remainingBounces = 0;
 
-    }
-
-    // // shoot initial ray if specular prop > 0
-    // if (material[0] > 0.0) {
-    //     ray.direction = reflect(rayDir, worldNor);
-    //     ray.origin = worldPos + worldNor * EPSILON;
-    //     ray.color = albedo;  
-    // } else {
-    //     ray.color = albedo;    
-    //     ray.remainingBounces = 0;
-    // }
-
-
-#else
-    //==================================
     // shoot initial ray if specular prop > 0
     if (material[0] > 0.0) {
         ray.direction = reflect(rayDir, worldNor);
@@ -290,8 +262,6 @@ Ray castRay() {
         ray.color = albedo;    
         ray.remainingBounces = 0;
     }
-    //==================================
-#endif
     
     
 
@@ -333,30 +303,6 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
         return;
     }
 
-#if USE_RANDOM
-    if (random < specularProp) {    // shoot specular ray
-        ray.direction = reflect(ray.direction, normal);
-        ray.origin = intersectionP + normal * EPSILON;
-        ray.color *= baseColor.xyz;                
-        ray.remainingBounces--;   
-        
-    } else if (random < specularProp + diffuseProp) {  // shoot a diffuse ray 
-        // // shoot a diffuse ray    
-        // ray.direction = calculateRandomDirectionInHemisphere(normal);
-        // ray.origin = intersectionP + normal * EPSILON;
-        // ray.color *= baseColor.xyz;                
-        // ray.remainingBounces--;   
-
-        // terminate reflection difrectly 
-        ray.color *= baseColor.xyz;     
-        ray.remainingBounces = 0;   
-
-    } else {
-        ray.remainingBounces = 0;      
-
-    }
-
-#else
 
     if (specularProp > 0.0) {
         ray.direction = reflect(ray.direction, normal);
@@ -371,9 +317,6 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
                 +  ray.color * (1.0 - ray.accuSpecular);
     ray.accuSpecular *= specularProp;
     
-
-#endif
-
 }
 
 void raytrace(inout Ray ray) {

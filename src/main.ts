@@ -102,19 +102,32 @@ function loadScene() {
   scene.addSceneElement(mesh, textureSet);
   
 
-  // load models mesh & textures
-  objString = loadOBJText('resources/obj/models.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
-  baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
-  mesh = new Mesh(objString, material, baseColor);
-  mesh.create();
+  // // load models mesh & textures
+  // objString = loadOBJText('resources/obj/models.obj');
+  // material = new Material(1.0, 0.0, 0.0, 0.0);  
+  // baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
 
-  // textureSet = new Map<string, Texture>();
-  // texture = new Texture('resources/textures/ice.jpg');
-  // textureSet.set('tex_Albedo', texture);
-  textureSet = null;
-  scene.addSceneElement(mesh, textureSet);
+  // // textureSet = new Map<string, Texture>();
+  // // texture = new Texture('resources/textures/ice.jpg');
+  // // textureSet.set('tex_Albedo', texture);
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
 
+    // load diamond mesh & textures
+    objString = loadOBJText('resources/obj/diamond.obj');
+    material = new Material(1.0, 0.0, 0.0, 0.0);  
+    baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
+    mesh = new Mesh(objString, material, baseColor);
+    mesh.create();
+  
+    // textureSet = new Map<string, Texture>();
+    // texture = new Texture('resources/textures/ice.jpg');
+    // textureSet.set('tex_Albedo', texture);
+    textureSet = null;
+    scene.addSceneElement(mesh, textureSet);
+  
 
   scene.buildSceneInfoTextures();
 
