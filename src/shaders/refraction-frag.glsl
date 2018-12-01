@@ -29,19 +29,9 @@ out vec4 out_Col;
 const int MAX_DEPTH = 2;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
+const float indexOfRefraction = 2.42;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
-
-
-// light source should be mesh  OK
-// lauch ray from gbuffer: what if miss at first place OK
-// intersection with triangles: closest  OK
-// light source need to be hard coded in shader
-// in out problem
-// reflection ray intersects with non-reflective triangle??
-// hit no triangle/hit no light: set to missColor or not???
-// when shoot rays from gbuffer, need to set hitLight to true for light mesh
-// three conditions: hit light, hit outside, hit triangles but not light
 
 struct Ray{
     vec3 origin;
@@ -49,24 +39,9 @@ struct Ray{
     vec3 color;
     int remainingBounces;
     bool hitLight;
-    float accuSpecular;
+
 };
 
-float noise2d(float x, float y) {
-    return fract(sin(dot(vec2(x, y), vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-vec3 calculateRandomDirectionInHemisphere(vec3 normal) {
-    // coorelation is still high
-    float x = noise2d(fs_UV.x, fs_UV.y) * 2.0 - 1.0;
-    float y = noise2d(x, x) * 2.0 - 1.0;
-    float z = noise2d(x, y) * 2.0 - 1.0;
-    vec3 randomV = normalize(vec3(x, y, z));
-    if (dot(randomV, normal) < 0.0) {
-        randomV *= -1.0;
-    }
-    return randomV;
-}
 
 vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3, 
                     in vec2 uv1, in vec2 uv2, in vec2 uv3,
@@ -250,12 +225,16 @@ Ray castRay() {
     }
 
 
-    // shoot initial ray if specular prop > 0
-    if (material[0] > 0.0) {
-        ray.direction = reflect(rayDir, worldNor);
+    // shoot initial refraction ray if refraction prop > 0
+    if (material[2] > 0.0) {
+        float NI = dot(worldNor, rayDir);
+        float ratio = indexOfRefraction;
+        if (NI < 0.0) {
+            ratio = 1.0 / ratio;
+        }
+        ray.direction = refract(rayDir, worldNor, ratio);
         ray.origin = worldPos + worldNor * EPSILON;
         ray.color = albedo;  
-        ray.accuSpecular = material[0];
     } else {
         ray.color = albedo;    
         ray.remainingBounces = 0;
@@ -284,7 +263,7 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
     // vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
     // vec4 textureColor = 
 
-    float specularProp = material[0];  
+    float refractionProp = material[2];         
     float emittance = material[3];    
 
     
@@ -298,18 +277,20 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
     }
 
 
-    if (specularProp > 0.0) {
-        ray.direction = reflect(ray.direction, normal);
+    if (refractionProp > 0.0) {
+        float NI = dot(normal, ray.direction);
+        float ratio = indexOfRefraction;
+        if (NI < 0.0) {
+            ratio = 1.0 / ratio;
+        }
+        ray.direction = refract(ray.direction, normal, ratio);
         ray.origin = intersectionP + normal * EPSILON;             
         ray.remainingBounces--;   
     } else {
         ray.remainingBounces = 0;
     }
 
-
-    ray.color = (ray.color * baseColor.rgb) * ray.accuSpecular 
-                +  ray.color * (1.0 - ray.accuSpecular);
-    ray.accuSpecular *= specularProp;
+    ray.color *= baseColor.rgb;
     
 }
 

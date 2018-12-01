@@ -10,9 +10,10 @@ import GBufferPass from './passes/GBufferPass';
 import DeferredPass from './passes/DeferredPass';
 import RaycastPass from './passes/RaycastPass';
 import ShadowPass from './passes/ShadowPass';
+import ReflectionPass from './passes/ReflectionPass';
+import RefractionPass from './passes/RefractionPass';
 import { debug } from 'util';
 import { reverse } from 'dns';
-import ReflectionPass from './passes/ReflectionPass';
 import { Material } from '../../scene/scene';
 import Mesh from '../../geometry/Mesh';
 
@@ -51,10 +52,15 @@ class OpenGLRenderer {
   shadowBuffer: WebGLFramebuffer;
   shadowTarget: WebGLTexture;
 
-  // shadow pass
+  // reflection pass
   reflectionPass: ReflectionPass;
   reflectionBuffer: WebGLFramebuffer;
   reflectionTarget: WebGLTexture;
+
+  // refraction pass
+  refractionPass: ReflectionPass;
+  refractionBuffer: WebGLFramebuffer;
+  refractionTarget: WebGLTexture;
 
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
@@ -116,6 +122,23 @@ class OpenGLRenderer {
     gl.uniform1i(this.reflectionPass.unifAlbedo, 2);
     gl.uniform1i(this.reflectionPass.unifMaterial, 3);    
     gl.uniform1i(this.reflectionPass.unifSceneInfo, 4);
+
+    // set up refraction pass
+    this.refractionPass = new RefractionPass(require('../../shaders/screenspace-vert.glsl'),
+                                            require('../../shaders/refraction-frag.glsl'));
+
+    this.refractionPass.unifPos = gl.getUniformLocation(this.refractionPass.prog, "u_Pos");
+    this.refractionPass.unifNor = gl.getUniformLocation(this.refractionPass.prog, "u_Nor");
+    this.refractionPass.unifAlbedo = gl.getUniformLocation(this.refractionPass.prog, "u_Albedo");  
+    this.refractionPass.unifMaterial = gl.getUniformLocation(this.refractionPass.prog, "u_Material");          
+    this.refractionPass.unifSceneInfo = gl.getUniformLocation(this.refractionPass.prog, "u_SceneInfo");
+
+    this.refractionPass.use();
+    gl.uniform1i(this.refractionPass.unifPos, 0);
+    gl.uniform1i(this.refractionPass.unifNor, 1);
+    gl.uniform1i(this.refractionPass.unifAlbedo, 2);
+    gl.uniform1i(this.refractionPass.unifMaterial, 3);    
+    gl.uniform1i(this.refractionPass.unifSceneInfo, 4);
     
 
     if (!gl.getExtension("OES_texture_float_linear")) {
@@ -363,6 +386,28 @@ class OpenGLRenderer {
     this.reflectionPass.setViewMatrix(camera.viewMatrix);
 
     this.reflectionPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  }
+
+  refractionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
+    
+    let textures: WebGLTexture[] = [];
+    textures.push(this.gbTargets[1]);
+    textures.push(this.gbTargets[0]);
+    textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.gbTargets[3]);
+    
+    for(let i = 0; i < sceneInfo.length; i++) {
+      textures.push(sceneInfo[i].texture);
+    }
+
+    this.refractionPass.setViewMatrix(camera.viewMatrix);
+
+    this.refractionPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
