@@ -62,6 +62,8 @@ function loadScene() {
   let material;
   let baseColor;
 
+  let environment : Texture;
+
   // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
   material = new Material(1.0, 0.0, 0.0, 0.0);
@@ -85,8 +87,8 @@ function loadScene() {
   // textureSet = new Map<string, Texture>();
   // texture = new Texture('resources/textures/wall.jpg');
   // textureSet.set('tex_Albedo', texture);
-  textureSet = null;
-  scene.addSceneElement(mesh, textureSet);
+  //textureSet = null;
+  //scene.addSceneElement(mesh, textureSet);
 
   // load light mesh && textures
   objString = loadOBJText('resources/obj/light.obj');
@@ -115,19 +117,18 @@ function loadScene() {
   // textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
-    // load diamond mesh & textures
-    objString = loadOBJText('resources/obj/diamond.obj');
-    material = new Material(1.0, 0.0, 0.0, 0.0);  
-    baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
-    mesh = new Mesh(objString, material, baseColor);
-    mesh.create();
-  
-    // textureSet = new Map<string, Texture>();
-    // texture = new Texture('resources/textures/ice.jpg');
-    // textureSet.set('tex_Albedo', texture);
-    textureSet = null;
-    scene.addSceneElement(mesh, textureSet);
-  
+  // load diamond mesh & textures
+  objString = loadOBJText('resources/obj/diamond.obj');
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+
+  // textureSet = new Map<string, Texture>();
+  // texture = new Texture('resources/textures/ice.jpg');
+  // textureSet.set('tex_Albedo', texture);
+  textureSet = null;
+  scene.addSceneElement(mesh, textureSet);
 
   scene.buildSceneInfoTextures();
 
@@ -203,7 +204,7 @@ function main() {
 
     renderer.renderFromGBuffer(camera);
 
-    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets);
     
   //  renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
 

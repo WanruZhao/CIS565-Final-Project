@@ -7,13 +7,14 @@ import { performance } from 'perf_hooks';
 
 const maxTextureSize : number = 4096;
 
-var ELEMENT_TYPE = 
+export var ELEMENT_TYPE = 
 {
     POSITION: 0,
     NORMAL: 1,
     UV: 2,
     BASECOLOR: 3,
     MATERIAL: 4,
+    TEXTUREID: 5,
 };
 
 export class AABB {
@@ -129,8 +130,6 @@ export class Primitive {
         return new AABB(min, max);
     }
 
-
-
 }
 
 
@@ -213,6 +212,9 @@ export class Scene {
                 this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 1)] = this.meshes[i].material.diffuse;
                 this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 2)] = this.meshes[i].material.refraction;
                 this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 3)] = this.meshes[i].material.emittance;
+
+                // texture id
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.TEXTUREID, 0, 0)] = i; 
                 
             }
             currentCount = currentCount + this.meshes[i].count / 3;

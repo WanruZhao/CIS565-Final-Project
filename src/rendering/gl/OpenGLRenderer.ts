@@ -116,6 +116,8 @@ class OpenGLRenderer {
     gl.uniform1i(this.reflectionPass.unifAlbedo, 2);
     gl.uniform1i(this.reflectionPass.unifMaterial, 3);    
     gl.uniform1i(this.reflectionPass.unifSceneInfo, 4);
+    gl.uniform1i(this.reflectionPass.unifEnvMap, 5);
+    gl.uniform1i(this.reflectionPass.unifFloorTex, 6);
     
 
     if (!gl.getExtension("OES_texture_float_linear")) {
@@ -346,7 +348,7 @@ class OpenGLRenderer {
 
   }
 
-  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
+  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     // gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
     
@@ -358,6 +360,10 @@ class OpenGLRenderer {
     
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
+    }
+
+    for(let i = 0; i < textureSet.length; i++) {
+      //textures.push((textureSet[i]).get("tex_Albedo"));
     }
 
     this.reflectionPass.setViewMatrix(camera.viewMatrix);
