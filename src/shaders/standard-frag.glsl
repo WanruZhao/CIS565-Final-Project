@@ -48,7 +48,7 @@ void main() {
     // albedo.x | albedo.y | albedo.z | ...
     fragColor[2] = vec4(col, 1.0);
     
-    // store material information.  specular | deffuse | refraction | emittance
+    // store material information.  specular | diffuse | refraction | emittance
     fragColor[3] = u_Material;
 
 }

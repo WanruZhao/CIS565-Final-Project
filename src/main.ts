@@ -64,16 +64,19 @@ function loadScene() {
 
   let environment : Texture;
 
+  environment = new Texture('resources/textures/church.jpg');
+  scene.addEnvironmentTexture(environment);
+
   // load environment sphere mesh & textures
-  objString = loadOBJText('resources/obj/lowPolySphere.obj');
-  material = new Material(0.0, 1.0, 0.0, 1.0);
-  baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
-  mesh = new Mesh(objString, material, baseColor);
-  mesh.create();
-  textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/church.jpg');
-  textureSet.set('tex_Albedo', texture);
-  scene.addSceneElement(mesh, textureSet);
+  // objString = loadOBJText('resources/obj/lowPolySphere.obj');
+  // material = new Material(0.0, 1.0, 0.0, 1.0);
+  // baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+  // textureSet = new Map<string, Texture>();
+  // texture = new Texture('resources/textures/church.jpg');
+  // textureSet.set('tex_Albedo', texture);
+  //scene.addSceneElement(mesh, textureSet);
 
   // load table mesh & textures
   objString = loadOBJText('resources/obj/table.obj');
@@ -82,13 +85,13 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/marble.jpg');
+  texture = new Texture('resources/textures/marble4.jpg');
   textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
   // load light mesh && textures
   objString = loadOBJText('resources/obj/light.obj');
-  material = new Material(0.0, 1.0, 0.0, 1.0);  
+  material = new Material(0.0, 1.0, 0.0, 2.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -97,8 +100,8 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/diamond.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
-  baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = null;
@@ -176,10 +179,10 @@ function main() {
     // render demo scene
     renderer.renderToGBuffer(camera, scene.meshes, scene.textureSets);  
 
-    renderer.renderFromGBuffer(camera);
+    renderer.renderFromGBuffer(camera, scene.environment);
 
-    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets);
-    renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets);
+    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
+    renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
     renderer.raytraceComposeStage();
     
     

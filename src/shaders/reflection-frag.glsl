@@ -33,7 +33,7 @@ out vec4 out_Col;
 const int MAX_DEPTH = 4;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
-const float envEmittance = 0.5;
+const float envEmittance = 1.0;
 
 vec3 missColor = vec3(1.0, 0.0, 0.0);
 
@@ -48,6 +48,11 @@ struct Ray{
     float accuSpecular;
 };
 
+struct Intersection{
+    vec3 position;
+    vec3 normal;
+};
+
 vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3, 
                     in vec2 uv1, in vec2 uv2, in vec2 uv3,
                     vec3 p) {
@@ -58,8 +63,6 @@ vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3,
 
     vec2 p_uv = uv1 * s1 / s + uv2 * s2 / s + uv3 * s3 / s;
     return p_uv;
-    
-
 }
 
 void getTrianglePosition(in int index, out vec3 p0, out vec3 p1, out vec3 p2) {
@@ -138,6 +141,15 @@ vec4 getTriangleMaterial(in int index) {
     return texture(u_SceneInfo, vec2(u, v0));
 }
 
+// calculate environment mapping parameters
+void calEnvUV(in vec3 pos, in vec3 nor, out vec2 uv) {
+    vec3 eye = normalize(pos - u_Camera);
+    vec3 r = reflect(eye, normalize(nor));
+    float m = 2.0 * sqrt(pow(r.x, 2.0) + pow(r.y, 2.0) + pow( r.z + 1.0, 2.0));
+    uv = r.xy / m + 0.5;
+    uv.y *= -1.0;
+}
+
 
 // reference to 
 // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -177,7 +189,7 @@ bool rayIntersectsTriangle(in vec3 rayOrigin,
         return false;
 }
 
-bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2, out vec3 p3, out vec3 intersectionP) {
+bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2, out vec3 p3, out Intersection intersection) {
     vec3 temp_p1 = vec3(0.0);
     vec3 temp_p2 = vec3(0.0);
     vec3 temp_p3 = vec3(0.0);
@@ -186,14 +198,17 @@ bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2
 
     for(int i = 0; i < u_TriangleCount; i++) {
         getTrianglePosition(i, temp_p1, temp_p2, temp_p3);
-        if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionP)) {
-            float dist = length(intersectionP - ray.origin);
+        vec3 intersectionPos = intersection.position;
+        if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionPos)) {
+            float dist = length(intersectionPos - ray.origin);
             if (dist <= minDist) {
                 minDist = dist;
                 triangleIdx = i;
                 p1 = temp_p1;
                 p2 = temp_p2;
                 p3 = temp_p3;
+                intersection.position = intersectionPos;
+                intersection.normal = getTriangleNormal(i);
             }
         }
     }
@@ -208,7 +223,7 @@ bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2
 }
 
 // pay attention to rays that didnt hit anything----------------
-Ray castRay() {
+Ray castRay(out Intersection intersection) {
     Ray ray;
 
     vec4 NDC = vec4(0.0, 0.0, 1.0, 1.0);
@@ -223,6 +238,7 @@ Ray castRay() {
     vec3 worldNor = texture(u_Nor, fs_UV).xyz;
     vec3 albedo = texture(u_Albedo, fs_UV).xyz;
     vec4 material = texture(u_Material, fs_UV);
+    //material.y = 1.0 - material.y;
 
     ray.hitLight = false;
     ray.remainingBounces = MAX_DEPTH;    
@@ -235,10 +251,12 @@ Ray castRay() {
 
     // shoot initial ray if specular prop > 0
     if (material[0] > 0.0) {
-        ray.direction = reflect(rayDir, worldNor);
+        ray.direction = normalize(reflect(rayDir, worldNor));
         ray.origin = worldPos + worldNor * EPSILON;
         ray.color = albedo;  
         ray.accuSpecular = material[0];
+        intersection.position = worldPos;
+        intersection.normal = worldNor;
     } else {
         // ray.color = albedo;    
         ray.remainingBounces = -1;
@@ -254,8 +272,8 @@ Ray castRay() {
     return ray;
 }
 
-void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 intersectionP, out Ray ray) {    
-    vec3 normal = getTriangleNormal(triangleIdx);
+void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in Intersection intersection, out Ray ray) {    
+    //vec3 normal = getTriangleNormal(triangleIdx);
     vec4 material = getTriangleMaterial(triangleIdx);
     vec4 baseColor = getTriangleBaseColor(triangleIdx);
 
@@ -264,23 +282,23 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 in
 
     // hit light
     if (emittance > 0.0) {
-#if USE_ENV_SPHERE
-        vec2 uv1, uv2, uv3;
-        float texID = -1.0;
-        getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
-        // hit env sphere
-        if (texID < 0.1 && texID > -0.1) { 
-            vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
-            interpUV.y *= -1.0;
-            vec3 envColor = texture(u_EnvMap, interpUV).rgb;
-            ray.remainingBounces = 0;   
-            ray.hitLight = true; 
-            ray.color *= (envColor.xyz * envEmittance); 
-            // ray.color = (ray.color * envColor.rgb * envEmittance) * ray.accuSpecular 
-            // +  ray.color * (1.0 - ray.accuSpecular);
-            return;        
-        }
-#endif
+// #if USE_ENV_SPHERE
+//         vec2 uv1, uv2, uv3;
+//         float texID = -1.0;
+//         getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
+//         // hit env sphere
+//         if (texID < 0.1 && texID > -0.1) { 
+//             vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+//             interpUV.y *= -1.0;
+//             vec3 envColor = texture(u_EnvMap, interpUV).rgb;
+//             ray.remainingBounces = 0;   
+//             ray.hitLight = true; 
+//             ray.color *= (envColor.xyz * envEmittance); 
+//             // ray.color = (ray.color * envColor.rgb * envEmittance) * ray.accuSpecular 
+//             // +  ray.color * (1.0 - ray.accuSpecular);
+//             return;        
+//         }
+// #endif
             ray.remainingBounces = 0;   
             ray.hitLight = true; 
             ray.color *= (baseColor.xyz * emittance);   
@@ -292,8 +310,8 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 in
 
 
     if (specularProp > 0.0) {
-        ray.direction = reflect(ray.direction, normal);
-        ray.origin = intersectionP + normal * EPSILON;             
+        ray.direction = reflect(ray.direction, intersection.normal);
+        ray.origin = intersection.position + intersection.normal * EPSILON;             
         ray.remainingBounces--;   
     } else {
         ray.remainingBounces = 0;
@@ -304,7 +322,7 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 in
     float texID = -1.0;
     getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
     if (texID > 0.9 && texID < 1.1) {   // hit triangle with floor texture
-        vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+        vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersection.position);
         interpUV.y *= -1.0;        
         vec3 texColor = texture(u_FloorTex, interpUV).rgb;
         ray.color *= texColor.xyz;
@@ -320,15 +338,17 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 in
     
 }
 
-void raytrace(inout Ray ray) {
+void raytrace(inout Ray ray, inout Intersection intersection) {
     int triangleIdx = -1;
-    vec3 p1, p2, p3, intersectionP;
+    vec3 p1, p2, p3;
     
     // if hit any triangle
-    if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersectionP)) {                
-        shadeRay(triangleIdx, p1, p2, p3, intersectionP, ray);
+    if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersection)) {                
+        shadeRay(triangleIdx, p1, p2, p3, intersection, ray);
     } else {
-        // ray.color = missColor;
+        vec2 envUV;
+        calEnvUV(intersection.position, intersection.normal, envUV);
+        ray.color = texture(u_EnvMap, envUV).rgb * envEmittance;
         ray.remainingBounces = 0;
     }
 }
@@ -336,21 +356,23 @@ void raytrace(inout Ray ray) {
 
 
 
-void main() {   
-   Ray ray = castRay(); 
+void main() {
+    Intersection intersection;
+    Ray ray = castRay(intersection); 
 
-   if (ray.remainingBounces == -1) {
-       out_Col = vec4(missColor, 1.0);
-       return;
-   }
 
-   while (ray.remainingBounces > 0) {       
-        raytrace(ray);
-   }
+    if (ray.remainingBounces == -1) {
+        out_Col = vec4(missColor, 1.0);
+        return;
+    }
 
-   if (!ray.hitLight) {
-       ray.color *= 0.5;  // decrese color intensity for rays > maxDepth
-   }
+    while (ray.remainingBounces > 0) {       
+        raytrace(ray, intersection);
+    }
+
+    if (!ray.hitLight) {
+        ray.color *= 0.5;  // decrese color intensity for rays > maxDepth
+    }
     
 
     out_Col = vec4(ray.color, 1.0);   

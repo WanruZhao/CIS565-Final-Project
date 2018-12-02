@@ -140,6 +140,7 @@ export class Scene {
     kdTreeRoot: KDTreeNode
     sceneInfoTextures: TextureBuffer[]
     triangleCount: number
+    environment: Texture
 
     constructor() {
         this.primitives = new Array<Primitive>();
@@ -161,6 +162,10 @@ export class Scene {
         });
 
         this.triangleCount += (mesh.count / 3);
+    }
+
+    addEnvironmentTexture(env: Texture) {
+        this.environment = env;
     }
 
     buildSceneInfoTextures() {

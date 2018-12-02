@@ -10,6 +10,11 @@ class DeferredPass extends ShaderProgram {
   
 
   unifLightPos: WebGLUniformLocation;
+  unifCamera: WebGLUniformLocation;
+  unifViewInv: WebGLUniformLocation;
+  unifProjInv: WebGLUniformLocation;
+  unifFar: WebGLUniformLocation;
+  unifEnvMap: WebGLUniformLocation;
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
@@ -23,6 +28,10 @@ class DeferredPass extends ShaderProgram {
     }
     
     this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
+    this.unifCamera = gl.getUniformLocation(this.prog, "u_Camera");
+    this.unifViewInv = gl.getUniformLocation(this.prog, "u_ViewInv");
+    this.unifProjInv  = gl.getUniformLocation(this.prog, "u_ProjInv");
+    this.unifFar = gl.getUniformLocation(this.prog, "u_Far");
 
 	}
 
@@ -36,6 +45,10 @@ class DeferredPass extends ShaderProgram {
         let proj = camera.projectionMatrix;
         this.setViewMatrix(view);
         this.setProjMatrix(proj);
+        this.setCamera(camera.position);
+        this.setFar(camera.far);
+        this.setViewInv(mat4.invert(mat4.create(), camera.viewMatrix));
+        this.setProjInv(mat4.invert(mat4.create(), camera.projectionMatrix));
     
         for (let i = 0; i < gbTargets.length; i ++) {
           gl.activeTexture(gl.TEXTURE0 + i);
@@ -49,6 +62,38 @@ class DeferredPass extends ShaderProgram {
       this.use();
       if(this.unifLightPos != -1) {
         gl.uniform4fv(this.unifLightPos, pos);
+      }
+    }
+
+    setCamera(pos: vec3)
+    {
+      this.use();
+      if(this.unifCamera != -1) {
+          gl.uniform3fv(this.unifCamera, pos);
+      }
+    }
+
+    setViewInv(viewInv: mat4)
+    {
+      this.use();
+      if(this.unifViewInv != -1) {
+          gl.uniformMatrix4fv(this.unifViewInv, false, viewInv);
+      }
+    }
+
+    setProjInv(projInv: mat4)
+    {
+      this.use();
+      if(this.unifProjInv != -1) {
+          gl.uniformMatrix4fv(this.unifProjInv, false, projInv);
+      }
+    }
+
+    setFar(far: number)
+    {
+      this.use();
+      if(this.unifFar !== -1){
+          gl.uniform1f(this.unifFar, far);
       }
     }
 

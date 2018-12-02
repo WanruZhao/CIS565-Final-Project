@@ -79,6 +79,7 @@ class OpenGLRenderer {
     var gb1loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb1");
     var gb2loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb2");
     var gb3loc = gl.getUniformLocation(this.deferredPass.prog, "u_gb3");
+    var envloc = gl.getUniformLocation(this.deferredPass.prog, "u_EnvMap");
     
 
     this.deferredPass.use();
@@ -86,6 +87,7 @@ class OpenGLRenderer {
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
     gl.uniform1i(gb3loc, 3);
+    gl.uniform1i(envloc, 4);
     
 
     // set up raycast pass
@@ -384,9 +386,13 @@ class OpenGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-  renderFromGBuffer(camera: Camera) {
+  renderFromGBuffer(camera: Camera, env: Texture) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
+
+    this.reflectionPass.setupTexUnits(['u_EnvMap']);
+    this.reflectionPass.bindTexToUnit('u_EnvMap', env, 4);
+
     this.deferredPass.drawElement(camera, this.gbTargets);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
@@ -418,19 +424,18 @@ class OpenGLRenderer {
 
   }
 
-  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>) {
+  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>, env: Texture) {
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
     
     // bind envMap to TEXTURE0
-    if (textureSet[0]) {
-      let tex = textureSet[0].get('tex_Albedo');
-      this.reflectionPass.setupTexUnits(['u_EnvMap']);
-      this.reflectionPass.bindTexToUnit('u_EnvMap', tex, 0);
-    }
+    let tex = env;
+    this.reflectionPass.setupTexUnits(['u_EnvMap']);
+    this.reflectionPass.bindTexToUnit('u_EnvMap', tex, 0);
+
     // bind floor texture to TEXTURE1
-    if (textureSet[1]) {
-      let tex = textureSet[1].get('tex_Albedo');
+    if (textureSet[0]) {
+      tex = textureSet[0].get('tex_Albedo');
       this.reflectionPass.setupTexUnits(['u_FloorTex']);
       this.reflectionPass.bindTexToUnit('u_FloorTex', tex, 1);
     }
@@ -453,21 +458,20 @@ class OpenGLRenderer {
 
   }
 
-  refractionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>) {
+  refractionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>, env: Texture) {
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
     
     // bind envMap to TEXTURE0
-    if (textureSet[0]) {
-      let tex = textureSet[0].get('tex_Albedo');
-      this.refractionPass.setupTexUnits(['u_EnvMap']);
-      this.refractionPass.bindTexToUnit('u_EnvMap', tex, 0);
-    }
+    let tex = env;
+    this.reflectionPass.setupTexUnits(['u_EnvMap']);
+    this.reflectionPass.bindTexToUnit('u_EnvMap', tex, 0);
+
     // bind floor texture to TEXTURE1
-    if (textureSet[1]) {
-      let tex = textureSet[1].get('tex_Albedo');
-      this.refractionPass.setupTexUnits(['u_FloorTex']);
-      this.refractionPass.bindTexToUnit('u_FloorTex', tex, 1);
+    if (textureSet[0]) {
+      tex = textureSet[0].get('tex_Albedo');
+      this.reflectionPass.setupTexUnits(['u_FloorTex']);
+      this.reflectionPass.bindTexToUnit('u_FloorTex', tex, 1);
     }
 
     let textures: WebGLTexture[] = [];
