@@ -12,6 +12,7 @@ import RaycastPass from './passes/RaycastPass';
 import ShadowPass from './passes/ShadowPass';
 import ReflectionPass from './passes/ReflectionPass';
 import RefractionPass from './passes/RefractionPass';
+import RaytraceComposePass from './passes/RaytraceComposePass';
 import { debug } from 'util';
 import { reverse } from 'dns';
 import { Material } from '../../scene/scene';
@@ -27,11 +28,6 @@ class OpenGLRenderer {
   //original buffer render from g-buffer
   originalBufferFromGBuffer: WebGLFramebuffer;
   originalTargetFromGBuffer: WebGLTexture;
-
-  // post-processing buffers post-tonemapping (8-bit color)
-  // post8Buffers: WebGLFramebuffer[];
-  // post8Targets: WebGLTexture[];
-  // post8Passes: ShaderProgram[];
 
   currentTime: number; // timer number to apply to all drawing shaders
 
@@ -58,9 +54,14 @@ class OpenGLRenderer {
   reflectionTarget: WebGLTexture;
 
   // refraction pass
-  refractionPass: ReflectionPass;
+  refractionPass: RefractionPass;
   refractionBuffer: WebGLFramebuffer;
   refractionTarget: WebGLTexture;
+
+  // raytrace-compose pass
+  raytraceComposePass: RaytraceComposePass;
+  raytraceComposeBuffer: WebGLFramebuffer;
+  raytraceComposeTarget: WebGLTexture;
 
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
@@ -109,37 +110,56 @@ class OpenGLRenderer {
     // set up reflection pass
     this.reflectionPass = new ReflectionPass(require('../../shaders/screenspace-vert.glsl'),
                                               require('../../shaders/reflection-frag.glsl'));
-
+                                         
     this.reflectionPass.unifPos = gl.getUniformLocation(this.reflectionPass.prog, "u_Pos");
     this.reflectionPass.unifNor = gl.getUniformLocation(this.reflectionPass.prog, "u_Nor");
     this.reflectionPass.unifAlbedo = gl.getUniformLocation(this.reflectionPass.prog, "u_Albedo");  
     this.reflectionPass.unifMaterial = gl.getUniformLocation(this.reflectionPass.prog, "u_Material");          
     this.reflectionPass.unifSceneInfo = gl.getUniformLocation(this.reflectionPass.prog, "u_SceneInfo");
+    
 
-    this.reflectionPass.use();
-    gl.uniform1i(this.reflectionPass.unifPos, 0);
-    gl.uniform1i(this.reflectionPass.unifNor, 1);
-    gl.uniform1i(this.reflectionPass.unifAlbedo, 2);
-    gl.uniform1i(this.reflectionPass.unifMaterial, 3);    
-    gl.uniform1i(this.reflectionPass.unifSceneInfo, 4);
+    this.reflectionPass.use();  
+    // 0 for u_EnvMap, 1 for u_FloorTex
+    gl.uniform1i(this.reflectionPass.unifPos, 2);
+    gl.uniform1i(this.reflectionPass.unifNor, 3);
+    gl.uniform1i(this.reflectionPass.unifAlbedo, 4);
+    gl.uniform1i(this.reflectionPass.unifMaterial, 5);    
+    gl.uniform1i(this.reflectionPass.unifSceneInfo, 6);
 
     // set up refraction pass
     this.refractionPass = new RefractionPass(require('../../shaders/screenspace-vert.glsl'),
-                                            require('../../shaders/refraction-frag.glsl'));
-
+                                              require('../../shaders/refraction-frag.glsl'));
+   
     this.refractionPass.unifPos = gl.getUniformLocation(this.refractionPass.prog, "u_Pos");
     this.refractionPass.unifNor = gl.getUniformLocation(this.refractionPass.prog, "u_Nor");
     this.refractionPass.unifAlbedo = gl.getUniformLocation(this.refractionPass.prog, "u_Albedo");  
     this.refractionPass.unifMaterial = gl.getUniformLocation(this.refractionPass.prog, "u_Material");          
     this.refractionPass.unifSceneInfo = gl.getUniformLocation(this.refractionPass.prog, "u_SceneInfo");
 
-    this.refractionPass.use();
-    gl.uniform1i(this.refractionPass.unifPos, 0);
-    gl.uniform1i(this.refractionPass.unifNor, 1);
-    gl.uniform1i(this.refractionPass.unifAlbedo, 2);
-    gl.uniform1i(this.refractionPass.unifMaterial, 3);    
-    gl.uniform1i(this.refractionPass.unifSceneInfo, 4);
+    this.refractionPass.use();  
+    // 0 for u_EnvMap, 1 for u_FloorTex
+    gl.uniform1i(this.refractionPass.unifPos, 2);
+    gl.uniform1i(this.refractionPass.unifNor, 3);
+    gl.uniform1i(this.refractionPass.unifAlbedo, 4);
+    gl.uniform1i(this.refractionPass.unifMaterial, 5);    
+    gl.uniform1i(this.refractionPass.unifSceneInfo, 6);
+
+     // set up raytrace compose pass
+     this.raytraceComposePass = new RaytraceComposePass(require('../../shaders/screenspace-vert.glsl'),
+                                                        require('../../shaders/raytrace-compose-frag.glsl'));
+
+    this.raytraceComposePass.unifMaterial = gl.getUniformLocation(this.raytraceComposePass.prog, "u_Material");
+    this.raytraceComposePass.unifAlbedo = gl.getUniformLocation(this.raytraceComposePass.prog, "u_Albedo");
+    this.raytraceComposePass.unifReflection = gl.getUniformLocation(this.raytraceComposePass.prog, "u_Reflection");
+    this.raytraceComposePass.unifRefraction = gl.getUniformLocation(this.raytraceComposePass.prog, "u_Refraction");
     
+    this.raytraceComposePass.use();  
+    gl.uniform1i(this.raytraceComposePass.unifMaterial, 0);
+    gl.uniform1i(this.raytraceComposePass.unifAlbedo, 1);
+    gl.uniform1i(this.raytraceComposePass.unifReflection, 2);
+    gl.uniform1i(this.raytraceComposePass.unifRefraction, 3);
+    
+
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -274,6 +294,35 @@ class OpenGLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.reflectionTarget, 0);
 
+    // refraction
+    this.refractionBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.refractionTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.refractionTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.refractionTarget, 0);
+
+    // raytrace compose
+    this.raytraceComposeBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.raytraceComposeTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.raytraceComposeTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.raytraceComposeTarget, 0);
+
+    
 
     FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
@@ -369,10 +418,23 @@ class OpenGLRenderer {
 
   }
 
-  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
+  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>) {
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
     
+    // bind envMap to TEXTURE0
+    if (textureSet[0]) {
+      let tex = textureSet[0].get('tex_Albedo');
+      this.reflectionPass.setupTexUnits(['u_EnvMap']);
+      this.reflectionPass.bindTexToUnit('u_EnvMap', tex, 0);
+    }
+    // bind floor texture to TEXTURE1
+    if (textureSet[1]) {
+      let tex = textureSet[1].get('tex_Albedo');
+      this.reflectionPass.setupTexUnits(['u_FloorTex']);
+      this.reflectionPass.bindTexToUnit('u_FloorTex', tex, 1);
+    }
+
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
@@ -385,16 +447,29 @@ class OpenGLRenderer {
 
     this.reflectionPass.setViewMatrix(camera.viewMatrix);
 
-    this.reflectionPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+    this.reflectionPass.drawElement(camera, textures, 2, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   }
 
-  refractionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
+  refractionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>) {
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
     
+    // bind envMap to TEXTURE0
+    if (textureSet[0]) {
+      let tex = textureSet[0].get('tex_Albedo');
+      this.refractionPass.setupTexUnits(['u_EnvMap']);
+      this.refractionPass.bindTexToUnit('u_EnvMap', tex, 0);
+    }
+    // bind floor texture to TEXTURE1
+    if (textureSet[1]) {
+      let tex = textureSet[1].get('tex_Albedo');
+      this.refractionPass.setupTexUnits(['u_FloorTex']);
+      this.refractionPass.bindTexToUnit('u_FloorTex', tex, 1);
+    }
+
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
@@ -407,7 +482,23 @@ class OpenGLRenderer {
 
     this.refractionPass.setViewMatrix(camera.viewMatrix);
 
-    this.refractionPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+    this.refractionPass.drawElement(camera, textures, 2, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  }
+
+  raytraceComposeStage() {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+
+    let textures: WebGLTexture[] = [];
+    textures.push(this.gbTargets[3]);
+    textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.reflectionTarget);
+    textures.push(this.refractionTarget);
+
+    this.raytraceComposePass.drawElement(textures, this.canvas);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

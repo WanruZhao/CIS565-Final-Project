@@ -62,30 +62,28 @@ function loadScene() {
   let material;
   let baseColor;
 
-  // load table mesh & textures
-  objString = loadOBJText('resources/obj/table.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);
+  let environment : Texture;
+
+  // load environment sphere mesh & textures
+  objString = loadOBJText('resources/obj/lowPolySphere.obj');
+  material = new Material(0.0, 1.0, 0.0, 1.0);
   baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
-
-  // textureSet = new Map<string, Texture>();
-  // texture = new Texture('resources/textures/marble.jpg');
-  // textureSet.set('tex_Albedo', texture);
-  textureSet = null;
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/church.jpg');
+  textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
-  // load wall mesh && textures
-  objString = loadOBJText('resources/obj/wall.obj');
-  material = new Material(1.0, 1.0, 0.0, 0.0);  
-  baseColor = vec4.fromValues(0.8, 0.8, 0.8, 1.0);  
+  // load table mesh & textures
+  objString = loadOBJText('resources/obj/table.obj');
+  material = new Material(0.5, 0.5, 0.0, 0.0);
+  baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
-
-  // textureSet = new Map<string, Texture>();
-  // texture = new Texture('resources/textures/wall.jpg');
-  // textureSet.set('tex_Albedo', texture);
-  textureSet = null;
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/marble.jpg');
+  textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
   // load light mesh && textures
@@ -94,40 +92,17 @@ function loadScene() {
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);  
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
-
-  // textureSet = new Map<string, Texture>();
-  // texture = new Texture('resources/textures/wall.jpg');
-  // textureSet.set('tex_Albedo', texture);
   textureSet = null;
   scene.addSceneElement(mesh, textureSet);
-  
 
-  // // load models mesh & textures
-  // objString = loadOBJText('resources/obj/models.obj');
-  // material = new Material(1.0, 0.0, 0.0, 0.0);  
-  // baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-
-  // // textureSet = new Map<string, Texture>();
-  // // texture = new Texture('resources/textures/ice.jpg');
-  // // textureSet.set('tex_Albedo', texture);
-  // textureSet = null;
-  // scene.addSceneElement(mesh, textureSet);
-
-    // load diamond mesh & textures
-    objString = loadOBJText('resources/obj/diamond.obj');
-    material = new Material(1.0, 0.0, 0.0, 0.0);  
-    baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
-    mesh = new Mesh(objString, material, baseColor);
-    mesh.create();
-  
-    // textureSet = new Map<string, Texture>();
-    // texture = new Texture('resources/textures/ice.jpg');
-    // textureSet.set('tex_Albedo', texture);
-    textureSet = null;
-    scene.addSceneElement(mesh, textureSet);
-  
+  // load diamond mesh & textures
+  objString = loadOBJText('resources/obj/diamond.obj');
+  material = new Material(1.0, 0.0, 1.0, 0.0);  
+  baseColor = vec4.fromValues(0.3, 0.9, 0.3, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
+  scene.addSceneElement(mesh, textureSet);
 
   scene.buildSceneInfoTextures();
 
@@ -159,7 +134,7 @@ function main() {
   // Initial call to load scene
   loadScene();
 
-  const camera = new Camera(vec3.fromValues(10, 5, 30), vec3.fromValues(0, 5, 0));
+  const camera = new Camera(vec3.fromValues(10, 5, 5), vec3.fromValues(0, 5, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0, 0, 0, 1);
@@ -203,7 +178,10 @@ function main() {
 
     renderer.renderFromGBuffer(camera);
 
-    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets);
+    renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets);
+    renderer.raytraceComposeStage();
+    
     
   //  renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
 

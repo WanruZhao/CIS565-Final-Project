@@ -45,6 +45,7 @@ class RefractionPass extends ShaderProgram {
 
     drawElement(camera: Camera, 
                 targets: WebGLTexture[], 
+                texSlotOffet: number,
                 count: number, 
                 lightpos: vec4, 
                 canvas: HTMLCanvasElement, 
@@ -69,7 +70,7 @@ class RefractionPass extends ShaderProgram {
         this.setFar(camera.far);
         
         for (let i = 0; i < targets.length; i ++) {
-            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.activeTexture(gl.TEXTURE0 + i + texSlotOffet);
             gl.bindTexture(gl.TEXTURE_2D, targets[i]);
         }
 

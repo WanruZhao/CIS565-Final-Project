@@ -22,6 +22,10 @@ class ReflectionPass extends ShaderProgram {
     unifProjInv: WebGLUniformLocation;
     unifFar: WebGLUniformLocation;
 
+    // for environment map and object texture
+    unifEnvMap: WebGLUniformLocation;
+    unifFloorTex: WebGLUniformLocation;
+
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
 		let fragShader: Shader = new Shader(gl.FRAGMENT_SHADER, fragShaderSource);
@@ -41,10 +45,13 @@ class ReflectionPass extends ShaderProgram {
         this.unifViewInv = gl.getUniformLocation(this.prog, "u_ViewInv");
         this.unifProjInv  = gl.getUniformLocation(this.prog, "u_ProjInv");
         this.unifFar = gl.getUniformLocation(this.prog, "u_Far");
+
+        
     }
 
     drawElement(camera: Camera, 
                 targets: WebGLTexture[], 
+                texSlotOffet: number,
                 count: number, 
                 lightpos: vec4, 
                 canvas: HTMLCanvasElement, 
@@ -69,7 +76,7 @@ class ReflectionPass extends ShaderProgram {
         this.setFar(camera.far);
         
         for (let i = 0; i < targets.length; i ++) {
-            gl.activeTexture(gl.TEXTURE0 + i);
+            gl.activeTexture(gl.TEXTURE0 + i + texSlotOffet);
             gl.bindTexture(gl.TEXTURE_2D, targets[i]);
         }
 

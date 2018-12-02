@@ -1,15 +1,19 @@
 #version 300 es
 precision highp float;
 
+uniform sampler2D u_EnvMap;
+uniform sampler2D u_FloorTex;
+
 uniform sampler2D u_Pos;
 uniform sampler2D u_Nor;
 uniform sampler2D u_Albedo;
 uniform sampler2D u_Material;
-
 uniform sampler2D u_SceneInfo; // extend to multiple textures
+
 uniform int u_SceneTexWidth; // extend to multiple size
 uniform int u_SceneTexHeight; // extend to multiple size
 uniform int u_TriangleCount;
+
 
 // currently one light
 uniform vec4 u_LightPos;
@@ -26,22 +30,14 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 2;
+const int MAX_DEPTH = 4;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
+const float envEmittance = 0.5;
 
-vec3 missColor = vec3(0.0, 0.0, 0.0);
+vec3 missColor = vec3(1.0, 0.0, 0.0);
 
-
-// light source should be mesh  OK
-// lauch ray from gbuffer: what if miss at first place OK
-// intersection with triangles: closest  OK
-// light source need to be hard coded in shader
-// in out problem
-// reflection ray intersects with non-reflective triangle??
-// hit no triangle/hit no light: set to missColor or not???
-// when shoot rays from gbuffer, need to set hitLight to true for light mesh
-// three conditions: hit light, hit outside, hit triangles but not light
+#define USE_ENV_SPHERE 1
 
 struct Ray{
     vec3 origin;
@@ -116,7 +112,7 @@ vec3 getTriangleNormal(in int index) {
     return (n0 + n1 + n2) / 3.0;
 }
 
-void getTriangleUV(in int index, out vec2 UV0, out vec2 UV1, out vec2 UV2) {
+void getTriangleUVAndTexID(in int index, out vec2 UV0, out vec2 UV1, out vec2 UV2, out float texID) {
     int row = index / u_SceneTexWidth;
     int col = index - row * u_SceneTexWidth;
 
@@ -130,6 +126,8 @@ void getTriangleUV(in int index, out vec2 UV0, out vec2 UV1, out vec2 UV2) {
     UV0 = texture(u_SceneInfo, vec2(u, v0)).xy;
     UV1 = texture(u_SceneInfo, vec2(u, v1)).xy;
     UV2 = texture(u_SceneInfo, vec2(u, v2)).xy;
+
+    texID = texture(u_SceneInfo, vec2(u, v0)).z;
 }
 
 vec4 getTriangleBaseColor(in int index) {
@@ -195,20 +193,23 @@ bool rayIntersectsTriangle(in vec3 rayOrigin,
         return false;
 }
 
-bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 intersectionP) {
-    vec3 p0 = vec3(0.0);
-    vec3 p1 = vec3(0.0);
-    vec3 p2 = vec3(0.0);
+bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2, out vec3 p3, out vec3 intersectionP) {
+    vec3 temp_p1 = vec3(0.0);
+    vec3 temp_p2 = vec3(0.0);
+    vec3 temp_p3 = vec3(0.0);
 
     float minDist = FLT_MAX;
 
     for(int i = 0; i < u_TriangleCount; i++) {
-        getTrianglePosition(i, p0, p1, p2);
-        if(rayIntersectsTriangle(ray.origin, ray.direction, p0, p1, p2, intersectionP)) {
+        getTrianglePosition(i, temp_p1, temp_p2, temp_p3);
+        if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionP)) {
             float dist = length(intersectionP - ray.origin);
             if (dist <= minDist) {
                 minDist = dist;
                 triangleIdx = i;
+                p1 = temp_p1;
+                p2 = temp_p2;
+                p3 = temp_p3;
             }
         }
     }
@@ -244,9 +245,7 @@ Ray castRay() {
 
     // for screen pixels where no geometry and non-reflective
     if (length(worldNor) <= 0.0) {
-        ray.remainingBounces = 0;
-    } else {        
-        ray.remainingBounces = MAX_DEPTH;
+        ray.remainingBounces = -1;
     }
 
 
@@ -257,44 +256,53 @@ Ray castRay() {
         ray.color = albedo;  
         ray.accuSpecular = material[0];
     } else {
-        ray.color = albedo;    
-        ray.remainingBounces = 0;
+        // ray.color = albedo;    
+        ray.remainingBounces = -1;
     }
     
     
-    // for screen pixels on light mesh: shoot ray anyway
+    // for screen pixels on light mesh: do not shoot ray
     if (material[3] > 0.0) {
-        ray.color = albedo * material[3];  
-        ray.remainingBounces = 0;
+        ray.remainingBounces = -1;
+
     }
 
     return ray;
 }
 
-void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {    
+void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 intersectionP, out Ray ray) {    
     vec3 normal = getTriangleNormal(triangleIdx);
     vec4 material = getTriangleMaterial(triangleIdx);
     vec4 baseColor = getTriangleBaseColor(triangleIdx);
 
-    // for texture reflection==========
-    // vec3 p1, p2, p3;
-    // vec2 uv1, uv2, uv3;
-    // getTrianglePosition(triangleIdx, p1, p2, p3);
-    // getTriangleUV(triangleIdx, uv1, uv2, uv3);
-    // vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
-    // vec4 textureColor = 
-
     float specularProp = material[0];  
     float emittance = material[3];    
 
-    
     // hit light
     if (emittance > 0.0) {
-        ray.remainingBounces = 0;   
-        ray.hitLight = true; 
-        ray.color *= (baseColor.xyz * emittance);    
-    
-        return;
+#if USE_ENV_SPHERE
+        vec2 uv1, uv2, uv3;
+        float texID = -1.0;
+        getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
+        // hit env sphere
+        if (texID < 0.1 && texID > -0.1) { 
+            vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+            vec3 envColor = texture(u_EnvMap, interpUV).rgb;
+            ray.remainingBounces = 0;   
+            ray.hitLight = true; 
+            ray.color *= (envColor.xyz * envEmittance); 
+            // ray.color = (ray.color * envColor.rgb * envEmittance) * ray.accuSpecular 
+            // +  ray.color * (1.0 - ray.accuSpecular);
+            return;        
+        }
+#endif
+            ray.remainingBounces = 0;   
+            ray.hitLight = true; 
+            ray.color *= (baseColor.xyz * emittance);   
+            // ray.color = (ray.color * baseColor.rgb * emittance) * ray.accuSpecular 
+            // +  ray.color * (1.0 - ray.accuSpecular); 
+        
+            return;
     }
 
 
@@ -307,19 +315,32 @@ void shadeRay(in int triangleIdx, in vec3 intersectionP, out Ray ray) {
     }
 
 
-    ray.color = (ray.color * baseColor.rgb) * ray.accuSpecular 
-                +  ray.color * (1.0 - ray.accuSpecular);
-    ray.accuSpecular *= specularProp;
+    vec2 uv1, uv2, uv3;
+    float texID = -1.0;
+    getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
+    if (texID > 0.9 && texID < 1.1) {   // hit triangle with floor texture
+        vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+        vec3 texColor = texture(u_FloorTex, interpUV).rgb;
+        ray.color *= texColor.xyz;
+        
+    } else {
+        ray.color *= baseColor.xyz;
+    }
+    // ray.color = (ray.color * baseColor.rgb) * ray.accuSpecular 
+    //         +  ray.color * (1.0 - ray.accuSpecular);
+    // ray.accuSpecular *= specularProp;
+
+
     
 }
 
 void raytrace(inout Ray ray) {
     int triangleIdx = -1;
-    vec3 intersectionP = vec3(0.0);
+    vec3 p1, p2, p3, intersectionP;
     
     // if hit any triangle
-    if (intersectionCheck(ray, triangleIdx, intersectionP)) {                
-        shadeRay(triangleIdx, intersectionP, ray);
+    if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersectionP)) {                
+        shadeRay(triangleIdx, p1, p2, p3, intersectionP, ray);
     } else {
         // ray.color = missColor;
         ray.remainingBounces = 0;
@@ -329,26 +350,23 @@ void raytrace(inout Ray ray) {
 
 
 
-void main()
-{   
-   vec3 ambientLight = vec3(0.5, 0.5, 0.5); 
-   vec3 albedo = texture(u_Albedo, fs_UV).xyz;
-   
-    
-   Ray ray = castRay();   
+void main() {   
+   Ray ray = castRay(); 
+
+   if (ray.remainingBounces == -1) {
+       out_Col = vec4(missColor, 1.0);
+       return;
+   }
 
    while (ray.remainingBounces > 0) {       
         raytrace(ray);
    }
 
    if (!ray.hitLight) {
-    //    ray.color = albedo;
-        ray.color *= ambientLight;  // add ambien light manually
+       ray.color *= 0.5;  // decrese color intensity for rays > maxDepth
    }
     
 
     out_Col = vec4(ray.color, 1.0);   
-    // out_Col = vec4((ray.color + albedo) * 0.5, 1.0);  // blend with albedo
-
 
 }

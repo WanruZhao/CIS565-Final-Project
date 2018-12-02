@@ -1,4 +1,5 @@
 import {gl} from '../../globals';
+import {ELEMENT_TYPE} from '../../scene/scene';
 
 export class Texture {
   texture: WebGLTexture;
@@ -91,14 +92,35 @@ export class TextureBuffer
 		return this._buffer;
 	  }
 
-	  // positions, normals, UV, basecolor, material
+	  //--------------------------------------------------------
+	  // Scene information texture structure
+	  // position0 
+	  // position1 
+	  // position2 
+	  // normal0 
+	  // normal1 
+	  // normal2
+	  // UV0 + texture id
+	  // UV1
+	  // UV2
+	  // basecolor
+	  // material
+	  //--------------------------------------------------------
 	  bufferIndex(triangleIndex: number, component: number, index: number, bit: number){
 		let row = Math.floor(triangleIndex / this._width);
 		let col = triangleIndex - row * this._width;
+
+
+		if(component == ELEMENT_TYPE.TEXTUREID){
+			component = ELEMENT_TYPE.UV;
+			index = 0;
+			bit = 2;
+		}
+
 		let offset = Math.min(component, 3) * 3 + Math.max(0, component - 3) +  row * this._elementPerTriangle + index;
 		
 		return offset * this._width * 4 + col * 4 + bit;
-		//   return row * 3 * this._elementCount * 4 * this._width + 3 * component * 4 * this._width + index * 4 * this._width + col * 4 + bit;
+
 	  }
 
 	
