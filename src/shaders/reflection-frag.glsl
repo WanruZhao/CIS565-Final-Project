@@ -48,22 +48,6 @@ struct Ray{
     float accuSpecular;
 };
 
-float noise2d(float x, float y) {
-    return fract(sin(dot(vec2(x, y), vec2(12.9898, 78.233))) * 43758.5453);
-}
-
-vec3 calculateRandomDirectionInHemisphere(vec3 normal) {
-    // coorelation is still high
-    float x = noise2d(fs_UV.x, fs_UV.y) * 2.0 - 1.0;
-    float y = noise2d(x, x) * 2.0 - 1.0;
-    float z = noise2d(x, y) * 2.0 - 1.0;
-    vec3 randomV = normalize(vec3(x, y, z));
-    if (dot(randomV, normal) < 0.0) {
-        randomV *= -1.0;
-    }
-    return randomV;
-}
-
 vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3, 
                     in vec2 uv1, in vec2 uv2, in vec2 uv3,
                     vec3 p) {
@@ -287,6 +271,7 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 in
         // hit env sphere
         if (texID < 0.1 && texID > -0.1) { 
             vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+            interpUV.y *= -1.0;
             vec3 envColor = texture(u_EnvMap, interpUV).rgb;
             ray.remainingBounces = 0;   
             ray.hitLight = true; 
@@ -320,6 +305,7 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in vec3 in
     getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
     if (texID > 0.9 && texID < 1.1) {   // hit triangle with floor texture
         vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
+        interpUV.y *= -1.0;        
         vec3 texColor = texture(u_FloorTex, interpUV).rgb;
         ray.color *= texColor.xyz;
         
@@ -368,5 +354,8 @@ void main() {
     
 
     out_Col = vec4(ray.color, 1.0);   
+
+    // vec3 color = texture(u_EnvMap, vec2(fs_UV.x, fs_UV.y *(-1.0))).xyz;
+    // out_Col = vec4(color, 1.0);
 
 }
