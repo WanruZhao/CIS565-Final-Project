@@ -35,7 +35,7 @@ const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
 
-vec3 missColor = vec3(1.0, 0.0, 0.0);
+vec3 missColor = vec3(0.0, 0.0, 0.0);
 
 #define USE_ENV_SPHERE 1
 
