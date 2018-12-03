@@ -348,7 +348,7 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
     } else {
         vec2 envUV;
         calEnvUV(intersection.position, intersection.normal, envUV);
-        ray.color = texture(u_EnvMap, envUV).rgb * envEmittance;
+        ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
         ray.remainingBounces = 0;
     }
 }
