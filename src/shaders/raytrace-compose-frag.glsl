@@ -29,7 +29,8 @@ void main() {
     color = reflection * specularProp + albedo * diffuseProp + refraction * refractionProp;
     out_Col = vec4(color, 1.0);
 
-    //out_Col = vec4(vec3(specularProp), 1.0);
+    // out_Col = vec4(refraction, 1.0);
+    
 
 }
 

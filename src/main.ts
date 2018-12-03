@@ -85,7 +85,7 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/marble4.jpg');
+  texture = new Texture('resources/textures/marble.jpg');
   textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
@@ -100,7 +100,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/diamond.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  material = new Material(0.3, 0.0, 0.7, 0.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();

@@ -464,14 +464,14 @@ class OpenGLRenderer {
     
     // bind envMap to TEXTURE0
     let tex = env;
-    this.reflectionPass.setupTexUnits(['u_EnvMap']);
-    this.reflectionPass.bindTexToUnit('u_EnvMap', tex, 0);
+    this.refractionPass.setupTexUnits(['u_EnvMap']);
+    this.refractionPass.bindTexToUnit('u_EnvMap', tex, 0);
 
     // bind floor texture to TEXTURE1
     if (textureSet[0]) {
       tex = textureSet[0].get('tex_Albedo');
-      this.reflectionPass.setupTexUnits(['u_FloorTex']);
-      this.reflectionPass.bindTexToUnit('u_FloorTex', tex, 1);
+      this.refractionPass.setupTexUnits(['u_FloorTex']);
+      this.refractionPass.bindTexToUnit('u_FloorTex', tex, 1);
     }
 
     let textures: WebGLTexture[] = [];
