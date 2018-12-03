@@ -341,6 +341,7 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in Interse
         interpUV.y *= -1.0;
         vec3 texColor = texture(u_FloorTex, interpUV).rgb;
         ray.color *= (texColor.xyz * 1.5);
+        
     } else {
         ray.color *= baseColor.xyz;
                                                                                               
@@ -360,7 +361,7 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
         // ray.color = missColor;
         vec2 envUV;
         calEnvUV(intersection.position, intersection.normal, envUV);
-        ray.color = texture(u_EnvMap, envUV).rgb * envEmittance;
+        ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
         ray.remainingBounces = 0;
         ray.hitLight = true;
     }
