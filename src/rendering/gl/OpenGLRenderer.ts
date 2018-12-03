@@ -13,10 +13,13 @@ import ShadowPass from './passes/ShadowPass';
 import ReflectionPass from './passes/ReflectionPass';
 import RefractionPass from './passes/RefractionPass';
 import RaytraceComposePass from './passes/RaytraceComposePass';
+
 import { debug } from 'util';
 import { reverse } from 'dns';
 import { Material } from '../../scene/scene';
 import Mesh from '../../geometry/Mesh';
+import DOFPass from './passes/DOFPass';
+import GlowPass from './passes/GlowPass';
 
 class OpenGLRenderer {
 
@@ -62,6 +65,22 @@ class OpenGLRenderer {
   raytraceComposePass: RaytraceComposePass;
   raytraceComposeBuffer: WebGLFramebuffer;
   raytraceComposeTarget: WebGLTexture;
+
+  // ---------------post process passes------------------------
+
+  // depth of field
+  dofPass: DOFPass;
+  dofBuffer: WebGLFramebuffer;
+  dofTarget: WebGLTexture;
+
+  // glow
+  glowSourcePass: GlowPass;
+  glowSourceBuffer: WebGLFramebuffer;
+  glowSourceTarget: WebGLTexture;
+  glowPass : GlowPass;
+  glowBuffer: WebGLFramebuffer;
+  glowTarget: WebGLTexture;
+
 
   constructor(public canvas: HTMLCanvasElement) {
     this.currentTime = 0.0;
@@ -147,7 +166,7 @@ class OpenGLRenderer {
     gl.uniform1i(this.refractionPass.unifSceneInfo, 6);
 
      // set up raytrace compose pass
-     this.raytraceComposePass = new RaytraceComposePass(require('../../shaders/screenspace-vert.glsl'),
+    this.raytraceComposePass = new RaytraceComposePass(require('../../shaders/screenspace-vert.glsl'),
                                                         require('../../shaders/raytrace-compose-frag.glsl'));
 
     this.raytraceComposePass.unifMaterial = gl.getUniformLocation(this.raytraceComposePass.prog, "u_Material");
@@ -160,9 +179,37 @@ class OpenGLRenderer {
     gl.uniform1i(this.raytraceComposePass.unifAlbedo, 1);
     gl.uniform1i(this.raytraceComposePass.unifReflection, 2);
     gl.uniform1i(this.raytraceComposePass.unifRefraction, 3);
+
+    // set up dof pass
+    this.dofPass = new DOFPass(require('../../shaders/screenspace-vert.glsl'),
+    require('../../shaders/dof.frag.glsl'));
+
+    this.dofPass.unifFrame = gl.getUniformLocation(this.dofPass.prog, "u_frame");
+    this.dofPass.unifNor = gl.getUniformLocation(this.dofPass.prog, "u_Nor");
+
+    this.dofPass.use();  
+    gl.uniform1i(this.dofPass.unifFrame, 0);
+    gl.uniform1i(this.dofPass.unifNor, 1);
+
+    // set up glow pass
+    this.glowSourcePass = new GlowPass(require('../../shaders/screenspace-vert.glsl'),
+    require('../../shaders/glowsource.frag.glsl'));
+
+    this.glowSourcePass.unifFrame = gl.getUniformLocation(this.glowSourcePass.prog, "u_frame");
+
+    this.glowSourcePass.use();  
+    gl.uniform1i(this.glowSourcePass.unifFrame, 0);
+
+    this.glowPass = new GlowPass(require('../../shaders/screenspace-vert.glsl'),
+    require('../../shaders/glow.frag.glsl'));
+
+    this.glowPass.unifFrame = gl.getUniformLocation(this.glowPass.prog, "u_frame");
+    this.glowPass.unifGlow = gl.getUniformLocation(this.glowPass.prog, "u_Glow");
+
+    this.glowPass.use();  
+    gl.uniform1i(this.glowPass.unifFrame, 0);
+    gl.uniform1i(this.glowPass.unifGlow, 1);
     
-
-
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
     }
@@ -324,7 +371,48 @@ class OpenGLRenderer {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.raytraceComposeTarget, 0);
 
-    
+    // dof
+    this.dofBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.dofBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.dofTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.dofTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.dofTarget, 0);
+
+    // glow
+    this.glowSourceBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowSourceBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.glowSourceTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.glowSourceTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.glowSourceTarget, 0);
+
+    this.glowBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.glowTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.glowTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.glowTarget, 0);
+
+
 
     FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
@@ -464,14 +552,14 @@ class OpenGLRenderer {
     
     // bind envMap to TEXTURE0
     let tex = env;
-    this.reflectionPass.setupTexUnits(['u_EnvMap']);
-    this.reflectionPass.bindTexToUnit('u_EnvMap', tex, 0);
+    this.refractionPass.setupTexUnits(['u_EnvMap']);
+    this.refractionPass.bindTexToUnit('u_EnvMap', tex, 0);
 
     // bind floor texture to TEXTURE1
     if (textureSet[0]) {
       tex = textureSet[0].get('tex_Albedo');
-      this.reflectionPass.setupTexUnits(['u_FloorTex']);
-      this.reflectionPass.bindTexToUnit('u_FloorTex', tex, 1);
+      this.refractionPass.setupTexUnits(['u_FloorTex']);
+      this.refractionPass.bindTexToUnit('u_FloorTex', tex, 1);
     }
 
     let textures: WebGLTexture[] = [];
@@ -493,8 +581,8 @@ class OpenGLRenderer {
   }
 
   raytraceComposeStage() {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
@@ -506,6 +594,43 @@ class OpenGLRenderer {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+  }
+
+  glow()
+  {
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowSourceBuffer);
+
+    let textures : WebGLTexture[];
+    textures = [];
+    textures.push(this.raytraceComposeTarget);
+    this.glowSourcePass.drawElement(this.canvas, textures);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowBuffer);
+
+    textures = [];
+    textures.push(this.raytraceComposeTarget);
+    textures.push(this.glowSourceTarget);
+    this.glowPass.drawElement(this.canvas, textures);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+  }
+
+  dof() {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.dofBuffer);
+
+    let textures : WebGLTexture[];
+    textures = [];
+    textures.push(this.glowTarget);
+    textures.push(this.gbTargets[0]);
+    this.dofPass.drawElement(this.canvas, textures);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
 };

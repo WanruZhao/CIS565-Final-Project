@@ -181,9 +181,12 @@ function main() {
 
     renderer.renderFromGBuffer(camera, scene.environment);
 
+
     renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
     renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
     renderer.raytraceComposeStage();
+    renderer.glow();
+    renderer.dof();
     
     
   //  renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);

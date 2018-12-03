@@ -374,4 +374,5 @@ void main() {
         
 
     out_Col = vec4(ray.color, 1.0);   
+
 }
