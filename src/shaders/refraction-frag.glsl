@@ -224,16 +224,6 @@ bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2
 
 }
 
-// vec3 getRefractionDir(in vec3 normal, in vec3 rayDir, in float indexOfRefraction) {
-//     float NI = dot(normal, rayDir);
-//     float ratio = indexOfRefraction;
-//     if (NI < 0.0) {
-//         ratio = 1.0 / ratio;
-//     }
-//     vec3 refractDir = refract(rayDir, normal, ratio);
-//     return refractDir;
-// }
-
 void refractRay(in vec3 intersetionNormal, in vec3 intersectionP, in vec3 rayDir, in float indexOfRefraction, out Ray ray) {
     float criticalAngle = 0.0; 
     float theta_in;
@@ -301,8 +291,6 @@ Ray castRay(out Intersection intersection) {
 
     // shoot initial ray if refraction prop > 0
     if (material[2] > 0.0) {
-        // ray.direction = getRefractionDir(worldNor, rayDir, indexOfRefraction);
-        // ray.origin = worldPos - worldNor * EPSILON;
         refractRay(worldNor, worldPos, rayDir, indexOfRefraction, ray);
         ray.color = albedo;  
         intersection.position = worldPos;
@@ -331,21 +319,6 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in Interse
 
     // hit light
     if (emittance > 0.0) {
-// #if USE_ENV_SPHERE
-//         vec2 uv1, uv2, uv3;
-//         float texID = -1.0;
-//         getTriangleUVAndTexID(triangleIdx, uv1, uv2, uv3, texID);
-//         // hit env sphere
-//         if (texID < 0.1 && texID > -0.1) { 
-//             vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersectionP);
-//             interpUV.y *= -1.0;
-//             vec3 envColor = texture(u_EnvMap, interpUV).rgb;
-//             ray.remainingBounces = 0;   
-//             ray.hitLight = true; 
-//             ray.color *= (envColor.xyz * envEmittance); 
-//             return;        
-//         }
-// #endif
             ray.remainingBounces = 0;   
             ray.hitLight = true; 
             ray.color *= (baseColor.xyz * emittance);   
@@ -354,8 +327,6 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in Interse
 
 
     if (refractProp > 0.0) {
-        // ray.direction = getRefractionDir(intersection.normal, ray.direction, indexOfRefraction);
-        // ray.origin = intersection.position - intersection.normal * EPSILON;    
         refractRay(intersection.normal, intersection.position, ray.direction, indexOfRefraction, ray);        
         ray.remainingBounces--;   
     } else {
@@ -369,7 +340,7 @@ void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in Interse
         vec2 interpUV = interpolateUV(p1, p2, p3, uv1, uv2, uv3, intersection.position);
         interpUV.y *= -1.0;
         vec3 texColor = texture(u_FloorTex, interpUV).rgb;
-        ray.color *= texColor.xyz;
+        ray.color *= (texColor.xyz * 1.5);
     } else {
         ray.color *= baseColor.xyz;
                                                                                               
