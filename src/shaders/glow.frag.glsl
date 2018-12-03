@@ -17,11 +17,11 @@ float gaussian(in float x, in float sigma)
 
 void main()
 {
-    const int range = 30;
+    const int range = 100;
     const int halfrange = (range - 1) / 2;
     float kernel[range];
 
-    float sigma = 10.0;
+    float sigma = 70.0;
     float powersum = 0.0;
     for (int i = 0; i <= halfrange; ++i)
     {
@@ -34,20 +34,38 @@ void main()
     }
 
 
-    vec3 color = vec3(0.0);
+    vec3 colorx = vec3(0.0);
 
     for (int i = -halfrange; i <= halfrange; ++i)
     {
-        for (int j= -halfrange; j <= halfrange; ++j)
-        {
-            color += kernel[halfrange + j] * kernel[halfrange + i] * 
-                     texture(u_Glow, (fs_UV * vec2(u_Width, u_Height) + vec2(float(i), float(j))) / vec2(u_Width, u_Height)).rgb;
-        }
+        colorx += kernel[halfrange + i] * texture(u_Glow, (fs_UV * vec2(u_Width, u_Height) + vec2(float(i), 0.0)) / vec2(u_Width, u_Height)).rgb;
     }
 
-    color /= pow(powersum, 2.0);
+    vec3 colory = vec3(0.0);
+    for (int i = -halfrange; i <= halfrange; ++i)
+    {
+        colory += kernel[halfrange + i] * texture(u_Glow, (fs_UV * vec2(u_Width, u_Height) + vec2(0.0, float(i))) / vec2(u_Width, u_Height)).rgb;
+    }
+
+    vec3 colorxy = vec3(0.0);
+    for (int i = -halfrange; i <= halfrange; ++i)
+    {
+        colorxy += kernel[halfrange + i] * texture(u_Glow, (fs_UV * vec2(u_Width, u_Height) + vec2(float(i), -float(i))) / vec2(u_Width, u_Height)).rgb;
+    }
+    
+    vec3 coloryx = vec3(0.0);
+    for (int i = -halfrange; i <= halfrange; ++i)
+    {
+        coloryx += kernel[halfrange + i] * texture(u_Glow, (fs_UV * vec2(u_Width, u_Height) + vec2(float(i), float(i))) / vec2(u_Width, u_Height)).rgb;
+    }
+
+
+    colorx /= (powersum * 2.5);
+    colory /= (powersum * 2.5);
+    colorxy /= (powersum * 2.5);
+    coloryx /= (powersum * 2.5);
     
     vec3 originColor = texture(u_frame, fs_UV).rgb;
-    out_Col = vec4(color + originColor, 1.0);
+    out_Col = vec4(colorx + colory + colorxy + coloryx + originColor, 1.0);
 
 }

@@ -385,7 +385,7 @@ void main() {
     }
 
     if (!ray.hitLight) {
-        ray.color *= 0.5;  // decrese color intensity for rays > maxDepth
+        ray.color *= 0.8;  // decrese color intensity for rays > maxDepth
     }
         
 

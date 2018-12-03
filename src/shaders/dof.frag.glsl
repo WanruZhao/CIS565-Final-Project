@@ -22,9 +22,9 @@ void main()
     const int halfrange = (range - 1) / 2;
     float kernel[range];
     float depth = 1.0 - texture(u_Nor, fs_UV).w;
-    float d = abs(depth - 15.0) / 15.0;
+    float d = abs(depth - 25.0) / 25.0;
 
-    float sigma = 7.0 * d;
+    float sigma = 9.0 * d;
     float powersum = 0.0;
     for (int i = 0; i <= halfrange; ++i)
     {

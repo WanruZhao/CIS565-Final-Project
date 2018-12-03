@@ -69,8 +69,8 @@ function loadScene() {
 
   // load table mesh & textures
   objString = loadOBJText('resources/obj/demo_floor.obj');
-  material = new Material(0.6, 0.4, 0.0, 0.0);
-  baseColor = vec4.fromValues(1.0, 0.8, 0.8, 1.0);
+  material = new Material(0.5, 0.5, 0.0, 0.0);
+  baseColor = vec4.fromValues(1.0, 0.1, 0.1, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
@@ -89,7 +89,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/diamond.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(1.0, 0.9, 0.9, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -98,7 +98,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/demo_diamond1.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -107,7 +107,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/demo_diamond2.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(0.9, 1.0, 0.9, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -116,7 +116,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/demo_diamond3.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -125,7 +125,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/demo_diamond4.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(0.9, 0.9, 1.0, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -134,7 +134,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/demo_diamond5.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 0.9, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
@@ -143,7 +143,7 @@ function loadScene() {
 
   // load diamond mesh & textures
   objString = loadOBJText('resources/obj/demo_diamond6.obj');
-  material = new Material(0.3, 0.0, 0.7, 0.0);  
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
   baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();

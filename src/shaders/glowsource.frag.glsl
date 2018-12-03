@@ -10,7 +10,7 @@ void main()
 {
     vec3 color = texture(u_frame, fs_UV).rgb;
     float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    if(luminance > 0.9) { 
+    if(luminance > 0.99) { 
         out_Col = vec4(color, 1.0);
     } else {
         out_Col = vec4(vec3(0.0), 1.0);
