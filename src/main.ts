@@ -85,7 +85,7 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/marble.jpg');
+  texture = new Texture('resources/textures/marble3.jpg');
   textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
