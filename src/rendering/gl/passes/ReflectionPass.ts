@@ -69,8 +69,6 @@ class ReflectionPass extends ShaderProgram {
         this.setWidth(canvas.width);
         this.setSceneTextureSize(scenetexwidth, scenetexheight);
         this.setCamera(camera.position);
-        this.setWidth(canvas.width);
-        this.setHeight(canvas.height);
         this.setViewInv(mat4.invert(mat4.create(), camera.viewMatrix));
         this.setProjInv(mat4.invert(mat4.create(), camera.projectionMatrix));
         this.setFar(camera.far);

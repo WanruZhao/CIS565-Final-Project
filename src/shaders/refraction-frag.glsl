@@ -371,12 +371,12 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
 
 
 void main() {   
-                                                                                                    out_Col = vec4(1.0, 1.0, 1.0, 1.0);
+
     Intersection intersection;
     Ray ray = castRay(intersection); 
 
     if (ray.remainingBounces == -1) {
-                                                                                                    out_Col = vec4(missColor, 1.0);
+        out_Col = vec4(missColor, 1.0);
         return;
     }
 
@@ -385,12 +385,10 @@ void main() {
     }
 
     if (!ray.hitLight) {
-        ray.color *= 0.5;  // decrese color intensity for rays > maxDepth
+        ray.color *= 0.8;  // decrese color intensity for rays > maxDepth
     }
         
 
     out_Col = vec4(ray.color, 1.0);   
 
-                                                                                                    // out_Col = vec4(texture(u_FloorTex, fs_UV).xyz, 1.0);
-                                                                                                    
 }
