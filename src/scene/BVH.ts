@@ -3,6 +3,9 @@ import { Primitive, AABB } from './scene';
 const MAX_PRIMITIVES_IN_NODE = 8;
 const MIN_AABB_LENGTH = 0.001;
 
+
+let nodeCount = 0;
+
 export class KDTreeNode {
     id: number
     aabb: AABB
@@ -32,8 +35,9 @@ export function buildKDTree(primitives: Array<Primitive>, depth: number, maxDept
 
     let node = new KDTreeNode();
     node.primitives = primitives;
+    node.id = nodeCount++;
 
-    // calculate AABB
+    // calculate node AABB
     for (let i = 0; i < primitives.length; ++i) {
         let primitive = primitives[i];
         if (i == 0) {
@@ -43,48 +47,53 @@ export function buildKDTree(primitives: Array<Primitive>, depth: number, maxDept
         node.aabb = node.aabb.union(primitive.aabb);
     }
 
-    // cases when stop spliting
-    if (primitives.length <= MAX_PRIMITIVES_IN_NODE || depth > maxDepth) {
+    // cases when stop spliting only when reach maximum triangles of node
+    if (primitives.length <= MAX_PRIMITIVES_IN_NODE) {
         return node;
     }
+
+    // calculate axis
     let axis = node.aabb.getLongestAxis();
+    node.axis = axis;    
     if (node.aabb.max[axis] - node.aabb.min[axis] < MIN_AABB_LENGTH) {
         return node;
     }
 
-    // construct left and right primitives
+    // sorting and construct left and right primitives
     primitives = primitives.sort((p1, p2) => {
-        let center1 = p1.aabb.getMedianPoint();
-        let center2 = p2.aabb.getMedianPoint();
+        let center1 = p1.aabb.getCenterPoint();
+        let center2 = p2.aabb.getCenterPoint();
         
         return center1[axis] - center2[axis];
     });
 
-    let leftPrimitives = primitives.slice(0, primitives.length / 2 + 1);
-    let rightPrimitives = primitives.slice(primitives.length / 2 + 1, primitives.length);
+    let leftPrimitives = primitives.slice(0, primitives.length / 2);
+    let rightPrimitives = primitives.slice(primitives.length / 2, primitives.length);
 
     node.left = buildKDTree(leftPrimitives, depth + 1, maxDepth);
     node.right = buildKDTree(rightPrimitives, depth + 1, maxDepth);
-    
-    node.axis = axis;
     
     return node;
 
 }
 
-// traverse kd tree to assign id to each node
-function traverseKDTree(root: KDTreeNode) {
-    let count = 0;
-    let queue = Array<KDTreeNode>();
+// level-order traverse kd tree 
+export function traverseKDTree(root: KDTreeNode): KDTreeNode[] {
+    let queue = [];
+    let nodeList = [];
     queue.push(root);
     while (queue.length > 0) {
-        let node = queue.pop();
-        node.id = count++;
+        let node = queue.shift();
+        nodeList.push(node);
         node.left && queue.push(node.left);
-        node.left && queue.push(node.right);
+        node.right && queue.push(node.right);
     }
+
+    nodeList = nodeList.sort((node1, node2) => {
+        return node1.id - node2.id;
+    });
+
+    return nodeList;
 }
 
-export function flattenKDTree() {
 
-}

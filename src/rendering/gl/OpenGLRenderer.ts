@@ -5,7 +5,7 @@ import {gl} from '../../globals';
 import ShaderProgram, {Shader} from './ShaderProgram';
 import Square from '../../geometry/Square';
 import Icosphere from '../../geometry/Icosphere';
-import Texture, {TextureBuffer} from '../../rendering/gl/Texture';
+import Texture, {TextureBuffer, BVHTextureBuffer} from '../../rendering/gl/Texture';
 import GBufferPass from './passes/GBufferPass';
 import DeferredPass from './passes/DeferredPass';
 import RaycastPass from './passes/RaycastPass';
@@ -137,6 +137,8 @@ class OpenGLRenderer {
     this.reflectionPass.unifAlbedo = gl.getUniformLocation(this.reflectionPass.prog, "u_Albedo");  
     this.reflectionPass.unifMaterial = gl.getUniformLocation(this.reflectionPass.prog, "u_Material");          
     this.reflectionPass.unifSceneInfo = gl.getUniformLocation(this.reflectionPass.prog, "u_SceneInfo");
+    this.reflectionPass.unifBVH = gl.getUniformLocation(this.reflectionPass.prog, "u_BVH");
+    
     
 
     this.reflectionPass.use();  
@@ -146,6 +148,8 @@ class OpenGLRenderer {
     gl.uniform1i(this.reflectionPass.unifAlbedo, 4);
     gl.uniform1i(this.reflectionPass.unifMaterial, 5);    
     gl.uniform1i(this.reflectionPass.unifSceneInfo, 6);
+    gl.uniform1i(this.reflectionPass.unifBVH, 7);
+    
 
     // set up refraction pass
     this.refractionPass = new RefractionPass(require('../../shaders/screenspace-vert.glsl'),
@@ -156,6 +160,7 @@ class OpenGLRenderer {
     this.refractionPass.unifAlbedo = gl.getUniformLocation(this.refractionPass.prog, "u_Albedo");  
     this.refractionPass.unifMaterial = gl.getUniformLocation(this.refractionPass.prog, "u_Material");          
     this.refractionPass.unifSceneInfo = gl.getUniformLocation(this.refractionPass.prog, "u_SceneInfo");
+    this.refractionPass.unifBVH = gl.getUniformLocation(this.refractionPass.prog, "u_BVH");
 
     this.refractionPass.use();  
     // 0 for u_EnvMap, 1 for u_FloorTex
@@ -164,6 +169,8 @@ class OpenGLRenderer {
     gl.uniform1i(this.refractionPass.unifAlbedo, 4);
     gl.uniform1i(this.refractionPass.unifMaterial, 5);    
     gl.uniform1i(this.refractionPass.unifSceneInfo, 6);
+    gl.uniform1i(this.refractionPass.unifBVH, 7);
+
 
      // set up raytrace compose pass
     this.raytraceComposePass = new RaytraceComposePass(require('../../shaders/screenspace-vert.glsl'),
@@ -477,8 +484,8 @@ class OpenGLRenderer {
   }
 
   renderFromGBuffer(camera: Camera, env: Texture) {
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
 
     this.reflectionPass.setupTexUnits(['u_EnvMap']);
     this.reflectionPass.bindTexToUnit('u_EnvMap', env, 4);
@@ -515,7 +522,13 @@ class OpenGLRenderer {
 
   }
 
-  reflectionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>, env: Texture) {
+  reflectionStage(camera: Camera, 
+                  sceneInfo: TextureBuffer[], 
+                  triangleCount: number, 
+                  BVHTextures: BVHTextureBuffer[], 
+                  nodeCount: number,                  
+                  textureSet: Array<Map<string, Texture>>, 
+                  env: Texture) {
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
     
@@ -534,23 +547,33 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    // textures.push(this.originalTargetFromGBuffer);
-    textures.push(this.shadowTarget);
+    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
     }
 
+    for(let i = 0; i < BVHTextures.length; i++) {
+      textures.push(BVHTextures[i].texture);
+    }
+
     this.reflectionPass.setViewMatrix(camera.viewMatrix);
 
-    this.reflectionPass.drawElement(camera, textures, 2, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+    this.reflectionPass.drawElement(camera, textures, 2, triangleCount, nodeCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height, BVHTextures[0]._width, BVHTextures[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   }
 
-  refractionStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number, textureSet: Array<Map<string, Texture>>, env: Texture) {
+  refractionStage(camera: Camera, 
+                  sceneInfo: TextureBuffer[], 
+                  triangleCount: number, 
+                  BVHTextures: BVHTextureBuffer[], 
+                  nodeCount: number,                  
+                  textureSet: Array<Map<string, Texture>>, 
+                  env: Texture) {
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
     
@@ -569,17 +592,21 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    // textures.push(this.originalTargetFromGBuffer);
-    textures.push(this.shadowTarget);
+    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
     }
 
+    for(let i = 0; i < BVHTextures.length; i++) {
+      textures.push(BVHTextures[i].texture);
+    }
+
     this.refractionPass.setViewMatrix(camera.viewMatrix);
 
-    this.refractionPass.drawElement(camera, textures, 2, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+    this.refractionPass.drawElement(camera, textures, 2, triangleCount, nodeCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height,  BVHTextures[0]._width, BVHTextures[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -591,7 +618,8 @@ class OpenGLRenderer {
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
-    textures.push(this.shadowTarget);
+    // textures.push(this.shadowTarget); 
+    textures.push(this.originalTargetFromGBuffer);
     textures.push(this.reflectionTarget);
     textures.push(this.refractionTarget);
 

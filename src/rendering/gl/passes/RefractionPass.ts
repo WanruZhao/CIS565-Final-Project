@@ -14,13 +14,17 @@ class RefractionPass extends ShaderProgram {
     unifMaterial: WebGLUniformLocation;    
     unifSceneInfo: WebGLUniformLocation;
     unifTriangleCount: WebGLUniformLocation;
+    unifNodeCount: WebGLUniformLocation;    
     unifLightPos: WebGLUniformLocation;
     unifSceneTexWidth: WebGLUniformLocation;
     unifSceneTexHeight: WebGLUniformLocation;
+    unifBVHTexWidth: WebGLUniformLocation;
+    unifBVHTexHeight: WebGLUniformLocation;
     unifCamera: WebGLUniformLocation;
     unifViewInv: WebGLUniformLocation;
     unifProjInv: WebGLUniformLocation;
     unifFar: WebGLUniformLocation;
+    unifBVH: WebGLUniformLocation;
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
@@ -34,9 +38,12 @@ class RefractionPass extends ShaderProgram {
         }
         
         this.unifTriangleCount  = gl.getUniformLocation(this.prog, "u_TriangleCount");
+        this.unifNodeCount  = gl.getUniformLocation(this.prog, "u_NodeCount");        
         this.unifLightPos = gl.getUniformLocation(this.prog, "u_LightPos");
         this.unifSceneTexWidth = gl.getUniformLocation(this.prog, "u_SceneTexWidth");
         this.unifSceneTexHeight = gl.getUniformLocation(this.prog, "u_SceneTexHeight");
+        this.unifBVHTexWidth = gl.getUniformLocation(this.prog, "u_BVHTexWidth");
+        this.unifBVHTexHeight = gl.getUniformLocation(this.prog, "u_BVHTexHeight");
         this.unifCamera = gl.getUniformLocation(this.prog, "u_Camera");
         this.unifViewInv = gl.getUniformLocation(this.prog, "u_ViewInv");
         this.unifProjInv  = gl.getUniformLocation(this.prog, "u_ProjInv");
@@ -46,22 +53,28 @@ class RefractionPass extends ShaderProgram {
     drawElement(camera: Camera, 
                 targets: WebGLTexture[], 
                 texSlotOffet: number,
-                count: number, 
+                triangleCount: number, 
+                nodeCount: number,                 
                 lightpos: vec4, 
                 canvas: HTMLCanvasElement, 
                 scenetexwidth: number, 
-                scenetexheight: number) {
+                scenetexheight: number,
+                BVHTexWidth: number, 
+                BVHTexHeight: number,
+            ) {
 
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.disable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
-        this.setTriangleCount(count);
+        this.setTriangleCount(triangleCount);
+        this.setNodeCount(nodeCount);        
         this.setLightPos(lightpos);
         this.setHeight(canvas.height);
         this.setWidth(canvas.width);
         this.setSceneTextureSize(scenetexwidth, scenetexheight);
+        this.setBVHTextureSize(BVHTexWidth, BVHTexHeight);        
         this.setCamera(camera.position);
         this.setWidth(canvas.width);
         this.setHeight(canvas.height);
@@ -85,6 +98,13 @@ class RefractionPass extends ShaderProgram {
           }
       }
 
+      setNodeCount(count: number) {
+        this.use();
+        if(this.unifNodeCount != -1) {
+            gl.uniform1i(this.unifNodeCount, count);
+        }
+      }
+
       setLightPos(pos: vec4) {
         this.use();
         if(this.unifLightPos != -1) {
@@ -101,6 +121,16 @@ class RefractionPass extends ShaderProgram {
               gl.uniform1i(this.unifSceneTexHeight, height);
           }
       }
+
+      setBVHTextureSize(width: number, height: number) {
+        this.use();
+        if(this.unifBVHTexWidth != -1) {
+            gl.uniform1i(this.unifBVHTexWidth, width);
+        }
+        if(this.unifBVHTexHeight != -1) {
+            gl.uniform1i(this.unifBVHTexHeight, height);
+        }
+    }
 
       setCamera(pos: vec3)
       {
