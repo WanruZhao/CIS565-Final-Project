@@ -35,7 +35,7 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 30;
+const int MAX_DEPTH = 2;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
@@ -46,7 +46,7 @@ const int STACK_SIZE = 100;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
-#define USE_BVH 0
+#define USE_BVH 1
 
 
 struct Ray{

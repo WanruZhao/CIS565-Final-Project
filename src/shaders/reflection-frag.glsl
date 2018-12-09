@@ -47,7 +47,7 @@ const int STACK_SIZE = 100;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
-#define USE_BVH 0
+#define USE_BVH 1
 
 
 struct Ray{
