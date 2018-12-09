@@ -70,7 +70,7 @@ function loadScene() {
   // load table mesh & textures
   objString = loadOBJText('resources/obj/demo_floor.obj');
   material = new Material(0.5, 0.5, 0.0, 0.0);
-  baseColor = vec4.fromValues(1.0, 0.1, 0.1, 1.0);
+  baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
@@ -87,14 +87,14 @@ function loadScene() {
   textureSet = null;
   scene.addSceneElement(mesh, textureSet);
 
-  // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/diamond.obj');
-  // material = new Material(1.0, 0.0, 0.0, 0.0);  
-  // baseColor = vec4.fromValues(1.0, 0.9, 0.9, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
-  // scene.addSceneElement(mesh, textureSet);
+  // load diamond mesh & textures
+  objString = loadOBJText('resources/obj/diamond.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(1.0, 0.9, 0.9, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
+  scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
   // objString = loadOBJText('resources/obj/demo_diamond1.obj');
@@ -151,13 +151,22 @@ function loadScene() {
   // scene.addSceneElement(mesh, textureSet);
 
     //load cube mesh & textures
-  objString = loadOBJText('resources/obj/dragon.obj');
-  material = new Material(1.0, 0.0, 0.0, 0.0);  
-  baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
-  mesh = new Mesh(objString, material, baseColor);
-  mesh.create();
-  textureSet = null;
-  scene.addSceneElement(mesh, textureSet);
+  // objString = loadOBJText('resources/obj/demo_diamond6.obj');
+  // material = new Material(0.2, 0.0, 0.8, 0.0);  
+  // baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
+
+  //   //load cube mesh & textures
+  // objString = loadOBJText('resources/obj/dragon.obj');
+  // material = new Material(1.0, 0.0, 0.0, 0.0);  
+  // baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
 
   //     //load cube mesh & textures
   // objString = loadOBJText('resources/obj/models.obj');
@@ -192,7 +201,7 @@ function main() {
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
-  const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
+  const gl = <WebGL2RenderingContext> canvas.getContext('webgl2', {antialias:true});
   if (!gl) {
     alert('WebGL 2 not supported!');
   }
@@ -246,11 +255,11 @@ function main() {
     renderer.renderToGBuffer(camera, scene.meshes, scene.textureSets);  
 
     renderer.renderFromGBuffer(camera, scene.environment);
-    // renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+    renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount);
 
-    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
-    renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
-    renderer.raytraceComposeStage();
+    // renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
+    // renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
+    // renderer.raytraceComposeStage();
     // renderer.glow();
     // renderer.dof();
     

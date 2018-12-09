@@ -121,12 +121,15 @@ class OpenGLRenderer {
     this.shadowPass.unifNor = gl.getUniformLocation(this.shadowPass.prog, "u_Nor");
     this.shadowPass.unifSceneInfo = gl.getUniformLocation(this.shadowPass.prog, "u_SceneInfo");
     this.shadowPass.unifAlbedo = gl.getUniformLocation(this.shadowPass.prog, "u_Albedo");
+    this.shadowPass.unifBVH = gl.getUniformLocation(this.shadowPass.prog, "u_BVH");
 
     this.shadowPass.use();
     gl.uniform1i(this.shadowPass.unifPos, 0);
     gl.uniform1i(this.shadowPass.unifNor, 1);
     gl.uniform1i(this.shadowPass.unifAlbedo, 2);
     gl.uniform1i(this.shadowPass.unifSceneInfo, 3);
+    gl.uniform1i(this.shadowPass.unifBVH, 4);
+    
 
     // set up reflection pass
     this.reflectionPass = new ReflectionPass(require('../../shaders/screenspace-vert.glsl'),
@@ -475,6 +478,8 @@ class OpenGLRenderer {
                                   meshes[i].material.refraction, 
                                   meshes[i].material.emittance);
 
+      this.gBufferPass.setHeight(this.canvas.height);
+      this.gBufferPass.setWidth(this.canvas.width);
       this.gBufferPass.drawElements(camera, [meshes[i]]);
     }
 
@@ -499,10 +504,14 @@ class OpenGLRenderer {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
-  shadowStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number)
-  {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  shadowStage(camera: Camera, 
+              sceneInfo: TextureBuffer[], 
+              triangleCount: number,
+              BVHTextures: BVHTextureBuffer[], 
+              nodeCount: number,     
+            ){
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
@@ -512,9 +521,13 @@ class OpenGLRenderer {
       textures.push(sceneInfo[i].texture);
     }
 
+    for(let i = 0; i < BVHTextures.length; i++) {
+      textures.push(BVHTextures[i].texture);
+    }
+
     this.shadowPass.setViewMatrix(camera.viewMatrix);
 
-    this.shadowPass.drawElement(camera, textures, triangleCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height);
+    this.shadowPass.drawElement(camera, textures, triangleCount, nodeCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height, BVHTextures[0]._width, BVHTextures[0]._height);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 

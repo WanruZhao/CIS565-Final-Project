@@ -19,6 +19,8 @@ uniform sampler2D tex_Albedo;
 uniform vec4 u_Color;
 uniform int u_UseTexture;
 uniform vec4 u_Material;
+uniform float u_Width;
+uniform float u_Height;
 
 
 void main() {
