@@ -74,7 +74,7 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/marble3.jpg');
+  texture = new Texture('resources/textures/marble6.jpg');
   textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
@@ -97,57 +97,57 @@ function loadScene() {
   scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/demo_diamond1.obj');
-  // material = new Material(0.2, 0.0, 0.8, 0.0);  
-  // baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
+  objString = loadOBJText('resources/obj/demo_diamond1.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/demo_diamond2.obj');
-  // material = new Material(0.2, 0.0, 0.8, 0.0);  
-  // baseColor = vec4.fromValues(0.9, 1.0, 0.9, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
+  objString = loadOBJText('resources/obj/demo_diamond2.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(0.9, 1.0, 0.9, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/demo_diamond3.obj');
-  // material = new Material(0.2, 0.0, 0.8, 0.0);  
-  // baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
+  objString = loadOBJText('resources/obj/demo_diamond3.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/demo_diamond4.obj');
-  // material = new Material(0.2, 0.0, 0.8, 0.0);  
-  // baseColor = vec4.fromValues(0.9, 0.9, 1.0, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
+  objString = loadOBJText('resources/obj/demo_diamond4.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(0.9, 0.9, 1.0, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/demo_diamond5.obj');
-  // material = new Material(0.2, 0.0, 0.8, 0.0);  
-  // baseColor = vec4.fromValues(1.0, 1.0, 0.9, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
+  objString = loadOBJText('resources/obj/demo_diamond5.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(1.0, 1.0, 0.9, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
-  // objString = loadOBJText('resources/obj/demo_diamond6.obj');
-  // material = new Material(0.2, 0.0, 0.8, 0.0);  
-  // baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = null;
+  objString = loadOBJText('resources/obj/demo_diamond6.obj');
+  material = new Material(0.2, 0.0, 0.8, 0.0);  
+  baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
   scene.buildSceneInfoTextures();
@@ -223,13 +223,15 @@ function main() {
     renderer.renderToGBuffer(camera, scene.meshes, scene.textureSets);  
 
     renderer.renderFromGBuffer(camera, scene.environment);
+    // renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);
+
+    // renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
+    // renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
+    // renderer.raytraceComposeStage();
 
 
-    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
-    renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
-    renderer.raytraceComposeStage();
-    renderer.glow();
-    renderer.dof();
+    // renderer.glow();
+    // renderer.dof();
     
     
   //  renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);

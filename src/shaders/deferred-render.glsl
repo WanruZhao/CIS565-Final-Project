@@ -32,7 +32,7 @@ void calRayDir(in vec2 fragcoord, out vec3 dir) {
 	vec2 ndc = vec2(fragcoord.x / u_Width, fragcoord.y / u_Height) * 2.0 - vec2(1.0);
 	vec4 p = vec4(ndc, 1.0, 1.0);
 	p = u_ViewInv * u_ProjInv * (p * u_Far);
-	dir = normalize(p.xyz - u_Camera);
+	dir = normalize(p.xyz);
 }
 
 void calEnvUV(in vec3 dir, out vec2 uv)
@@ -45,7 +45,19 @@ void calEnvUV(in vec3 dir, out vec2 uv)
 	uv = vec2(1.0 - phi / TWO_PI, theta / PI - 1.0);
 }
 
-
+void antialiasing(in int samplecount, out vec3 col) {
+	float total = pow(float(samplecount) + 1.0, 2.0);
+	for(int i = -samplecount; i <= samplecount; i++) {
+		for(int j = -samplecount; j <= samplecount; j++) {
+			vec2 offset = vec2(float(i), float(j));
+			if(offset.x >= 0.0 && offset.x < u_Width && offset.y >= 0.0 && offset.y < u_Height) {
+				vec2 uv = (fs_UV * vec2(u_Width, u_Height) + offset) / vec2(u_Width, u_Height);
+				col += texture(u_gb2, uv).rgb;
+			}
+		}
+	}
+	col /= total;
+}
 
 
 void main() { 
@@ -54,12 +66,14 @@ void main() {
 	vec4 col_1 = texture(u_gb1, fs_UV);
 	vec4 col_2 = texture(u_gb2, fs_UV);
 	vec4 col_3 = texture(u_gb3, fs_UV);
-	
 
 	vec3 dynamiclightpos = u_LightPos.xyz;
 	//dynamiclightpos.x *= sin(u_Time);
 
 	float lambert = clamp(dot(normalize(col_0.xyz), normalize(dynamiclightpos- col_1.xyz)), 0.4, 1.0);
+	if(col_3.w > 0.0) {
+		lambert = 1.0;
+	}
 	
 	bool isBackground = (col_0.w > 0.0);
 	vec2 uv;
@@ -67,10 +81,11 @@ void main() {
 	calRayDir(gl_FragCoord.xy, dir);
 	calEnvUV(dir, uv);
 
+
 	if(isBackground) {
 		out_Col = texture(u_EnvMap, uv);
 	} else {
-		out_Col = vec4(col_2.rgb * lambert * 1.5, 1.0);
+		out_Col = vec4(col_2.rgb * lambert, 1.0);
 	}
 	
 }

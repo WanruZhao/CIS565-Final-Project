@@ -35,6 +35,8 @@ const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
 const float indexOfRefraction = 2.42;   
+const float PI = 3.14159265359;
+const float TWO_PI = 6.28318530718;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
@@ -143,13 +145,27 @@ vec4 getTriangleMaterial(in int index) {
     return texture(u_SceneInfo, vec2(u, v0));
 }
 
+void calEnvUV(in vec3 dir, out vec2 uv)
+{
+	float phi = atan(dir.z, dir.x);
+	if(phi < 0.0) {
+		phi += TWO_PI;
+	}
+	float theta = acos(dir.y);
+	uv = vec2(1.0 - phi / TWO_PI, theta / PI - 1.0);
+}
+
 // calculate environment mapping parameters
 void calEnvUV(in vec3 pos, in vec3 nor, out vec2 uv) {
     vec3 eye = normalize(pos - u_Camera);
-    vec3 r = reflect(eye, normalize(nor));
-    float m = 2.0 * sqrt(pow(r.x, 2.0) + pow(r.y, 2.0) + pow( r.z + 1.0, 2.0));
-    uv = r.xy / m + 0.5;
-    uv.y *= -1.0;
+    vec3 r = normalize(reflect(eye, normalize(nor)));
+    float a = r.x * r.x + r.y * r.y + r.z * r.z;
+    float b = 2.0 * (r.x * pos.x + r.y * pos.y + r.z * pos.z);
+    float c = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z) - u_Far * u_Far;
+    float delta = sqrt(pow(b, 2.0) - 4.0 * a * c);
+    float t = (- b + delta) / (2.0 * a);
+    vec3 dir = normalize(pos + t * r);
+    calEnvUV(dir, uv);
 }
 
 

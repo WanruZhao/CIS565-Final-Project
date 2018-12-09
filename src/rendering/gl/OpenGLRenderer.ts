@@ -23,7 +23,7 @@ import GlowPass from './passes/GlowPass';
 
 class OpenGLRenderer {
 
-  lightPos: vec4 = vec4.fromValues(2.5, 5.0, 3.0, 1.0); // currently one light
+  lightPos: vec4 = vec4.fromValues(0.0, 10.0, 0.0, 1.0); // currently one light
 
   depthTexture: WebGLTexture; 
 
@@ -475,8 +475,8 @@ class OpenGLRenderer {
   }
 
   renderFromGBuffer(camera: Camera, env: Texture) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.originalBufferFromGBuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); // output to screen
 
     this.reflectionPass.setupTexUnits(['u_EnvMap']);
     this.reflectionPass.bindTexToUnit('u_EnvMap', env, 4);
@@ -494,12 +494,13 @@ class OpenGLRenderer {
 
   shadowStage(camera: Camera, sceneInfo: TextureBuffer[], triangleCount: number)
   {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    // textures.push(this.originalTargetFromGBuffer);
-    textures.push(this.reflectionTarget);
+    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.raytraceComposeTarget);
     for(let i = 0; i < sceneInfo.length; i++) {
       textures.push(sceneInfo[i].texture);
     }
@@ -531,7 +532,8 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -565,7 +567,8 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -581,12 +584,12 @@ class OpenGLRenderer {
   }
 
   raytraceComposeStage() {
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
-    textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.shadowTarget);
     textures.push(this.reflectionTarget);
     textures.push(this.refractionTarget);
 
@@ -627,6 +630,7 @@ class OpenGLRenderer {
     let textures : WebGLTexture[];
     textures = [];
     textures.push(this.glowTarget);
+    // textures.push(this.raytraceComposeTarget);
     textures.push(this.gbTargets[0]);
     this.dofPass.drawElement(this.canvas, textures);
 
