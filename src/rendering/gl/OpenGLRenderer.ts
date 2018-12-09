@@ -20,6 +20,7 @@ import { Material } from '../../scene/scene';
 import Mesh from '../../geometry/Mesh';
 import DOFPass from './passes/DOFPass';
 import GlowPass from './passes/GlowPass';
+import SSAAPass from './passes/SSAAPass';
 
 class OpenGLRenderer {
 
@@ -67,6 +68,11 @@ class OpenGLRenderer {
   raytraceComposeTarget: WebGLTexture;
 
   // ---------------post process passes------------------------
+
+  // ssaa
+  ssaaPass: SSAAPass;
+  ssaaBuffer: WebGLFramebuffer;
+  ssaaTarget: WebGLTexture;
 
   // depth of field
   dofPass: DOFPass;
@@ -187,6 +193,15 @@ class OpenGLRenderer {
     gl.uniform1i(this.raytraceComposePass.unifReflection, 2);
     gl.uniform1i(this.raytraceComposePass.unifRefraction, 3);
 
+    // set up ssaa pass
+    this.ssaaPass = new SSAAPass(require('../../shaders/screenspace-vert.glsl'),
+    require('../../shaders/SSAA.frag.glsl'));
+
+    this.ssaaPass.unifFrame = gl.getUniformLocation(this.ssaaPass.prog, "u_frame");
+
+    this.ssaaPass.use();  
+    gl.uniform1i(this.ssaaPass.unifFrame, 0);
+
     // set up dof pass
     this.dofPass = new DOFPass(require('../../shaders/screenspace-vert.glsl'),
     require('../../shaders/dof.frag.glsl'));
@@ -248,7 +263,7 @@ class OpenGLRenderer {
       this.gbTargets[i] = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[i]);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
@@ -263,7 +278,7 @@ class OpenGLRenderer {
     gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.DEPTH_COMPONENT, gl.FLOAT, null);
@@ -286,7 +301,7 @@ class OpenGLRenderer {
     this.originalTargetFromGBuffer = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.originalTargetFromGBuffer);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -308,7 +323,7 @@ class OpenGLRenderer {
     this.raycastTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.raycastTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -330,7 +345,7 @@ class OpenGLRenderer {
     this.shadowTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.shadowTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -344,7 +359,7 @@ class OpenGLRenderer {
     this.reflectionTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.reflectionTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -358,7 +373,7 @@ class OpenGLRenderer {
     this.refractionTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.refractionTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -372,11 +387,25 @@ class OpenGLRenderer {
     this.raytraceComposeTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.raytraceComposeTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.raytraceComposeTarget, 0);
+
+    // ssaa
+    this.ssaaBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.ssaaBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+
+    this.ssaaTarget = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.ssaaTarget);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.ssaaTarget, 0);
 
     // dof
     this.dofBuffer = gl.createFramebuffer();
@@ -386,7 +415,7 @@ class OpenGLRenderer {
     this.dofTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.dofTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -400,7 +429,7 @@ class OpenGLRenderer {
     this.glowSourceTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.glowSourceTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -413,7 +442,7 @@ class OpenGLRenderer {
     this.glowTarget = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, this.glowTarget);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
@@ -613,8 +642,8 @@ class OpenGLRenderer {
   }
 
   raytraceComposeStage() {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
@@ -627,6 +656,19 @@ class OpenGLRenderer {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+  }
+
+  ssaa()
+  {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.ssaaBuffer);
+
+    let textures: WebGLTexture[] = [];
+    textures.push(this.raytraceComposeTarget);
+
+    this.ssaaPass.drawElement(this.canvas, textures);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }
 
   glow()

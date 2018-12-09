@@ -28,6 +28,7 @@ let meshes: Mesh[];
 let sceneInfo: TextureBuffer[];
 let triangleCount: number;
 
+
 var timer = {
   deltaTime: 0.0,
   startTime: 0.0,
@@ -242,6 +243,7 @@ function main() {
     renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
     renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
     renderer.raytraceComposeStage();
+    renderer.ssaa();
     // renderer.glow();
     // renderer.dof();
     
