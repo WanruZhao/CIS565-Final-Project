@@ -539,8 +539,8 @@ class OpenGLRenderer {
               BVHTextures: BVHTextureBuffer[], 
               nodeCount: number,     
             ){
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
+    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
@@ -587,8 +587,8 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    textures.push(this.originalTargetFromGBuffer);
-    // textures.push(this.shadowTarget);
+    // textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -632,8 +632,8 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    textures.push(this.originalTargetFromGBuffer);
-    // textures.push(this.shadowTarget);
+    // textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -658,8 +658,8 @@ class OpenGLRenderer {
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
-    // textures.push(this.shadowTarget); 
-    textures.push(this.originalTargetFromGBuffer);
+    textures.push(this.shadowTarget); 
+    // textures.push(this.originalTargetFromGBuffer);
     textures.push(this.reflectionTarget);
     textures.push(this.refractionTarget);
 
