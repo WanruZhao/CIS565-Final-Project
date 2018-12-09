@@ -45,20 +45,6 @@ void calEnvUV(in vec3 dir, out vec2 uv)
 	uv = vec2(1.0 - phi / TWO_PI, theta / PI - 1.0);
 }
 
-void antialiasing(in int samplecount, out vec3 col) {
-	float total = pow(float(samplecount) + 1.0, 2.0);
-	for(int i = -samplecount; i <= samplecount; i++) {
-		for(int j = -samplecount; j <= samplecount; j++) {
-			vec2 offset = vec2(float(i), float(j));
-			if(offset.x >= 0.0 && offset.x < u_Width && offset.y >= 0.0 && offset.y < u_Height) {
-				vec2 uv = (fs_UV * vec2(u_Width, u_Height) + offset) / vec2(u_Width, u_Height);
-				col += texture(u_gb2, uv).rgb;
-			}
-		}
-	}
-	col /= total;
-}
-
 
 void main() { 
 	// read from GBuffers
@@ -80,7 +66,6 @@ void main() {
 	vec3 dir;
 	calRayDir(gl_FragCoord.xy, dir);
 	calEnvUV(dir, uv);
-
 
 	if(isBackground) {
 		out_Col = texture(u_EnvMap, uv);

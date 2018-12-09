@@ -468,6 +468,8 @@ class OpenGLRenderer {
                                   meshes[i].material.refraction, 
                                   meshes[i].material.emittance);
 
+      this.gBufferPass.setHeight(this.canvas.height);
+      this.gBufferPass.setWidth(this.canvas.width);
       this.gBufferPass.drawElements(camera, [meshes[i]]);
     }
 

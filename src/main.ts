@@ -169,7 +169,7 @@ function main() {
 
   // get canvas and webgl context
   const canvas = <HTMLCanvasElement> document.getElementById('canvas');
-  const gl = <WebGL2RenderingContext> canvas.getContext('webgl2');
+  const gl = <WebGL2RenderingContext> canvas.getContext('webgl2', {antialias:true});
   if (!gl) {
     alert('WebGL 2 not supported!');
   }
