@@ -106,5 +106,5 @@ void main()
     //uv.y = 1.0 - uv.y;
     vec2 fragCoord = uv * vec2(u_Width, u_Height);
     out_Col = vec4(fxaaPixelShader(fragCoord), 1.0);
-    // out_Col = texture(u_frame, uv);
+    out_Col = texture(u_frame, uv);
 }

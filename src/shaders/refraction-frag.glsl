@@ -31,11 +31,14 @@ uniform mat4 u_ViewInv;
 uniform mat4 u_ProjInv;
 uniform float u_Far;
 
+uniform int u_RayDepth;
+uniform int u_UseBVH;
+
+
 
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 7;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
@@ -463,7 +466,7 @@ Ray castRay(out Intersection intersection) {
     vec4 material = texture(u_Material, fs_UV);
 
     ray.hitLight = false;
-    ray.remainingBounces = MAX_DEPTH;    
+    ray.remainingBounces = u_RayDepth;    
 
     // for screen pixels where no geometry and non-reflective
     if (length(worldNor) <= 0.0) {
@@ -536,34 +539,34 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
     int triangleIdx = -1;
     vec3 p1, p2, p3;
 
-#if USE_BVH
-    //=============== use BVH ====================================
-    if (intersectionCheckByBVH(ray, triangleIdx, p1, p2, p3, intersection)) {     
-        shadeRay(triangleIdx, p1, p2, p3, intersection, ray);  
-   
+    if (u_UseBVH == 1) {
+        //=============== use BVH ====================================
+        if (intersectionCheckByBVH(ray, triangleIdx, p1, p2, p3, intersection)) {     
+            shadeRay(triangleIdx, p1, p2, p3, intersection, ray);  
+    
+        } else {
+            vec2 envUV;
+            calEnvUV(ray.origin, ray.direction, envUV);
+            ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+            ray.remainingBounces = 0;   
+            ray.hitLight = true;                           
+        }
+        //============================================================
     } else {
-        vec2 envUV;
-        calEnvUV(ray.origin, ray.direction, envUV);
-        ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-        ray.remainingBounces = 0;   
-        ray.hitLight = true;                           
+        //===============brute force loop============================
+        if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersection)) {                
+            shadeRay(triangleIdx, p1, p2, p3, intersection, ray);
+        } else {
+            // ray.color = missColor;
+            vec2 envUV;
+            calEnvUV(ray.origin, ray.direction, envUV);
+            ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+            ray.remainingBounces = 0;
+            ray.hitLight = true;
+        }
+        //============================================================
     }
-    //============================================================
 
-#else
-    //===============brute force loop============================
-    if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersection)) {                
-        shadeRay(triangleIdx, p1, p2, p3, intersection, ray);
-    } else {
-        // ray.color = missColor;
-        vec2 envUV;
-        calEnvUV(ray.origin, ray.direction, envUV);
-        ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-        ray.remainingBounces = 0;
-        ray.hitLight = true;
-    }
-    //============================================================
-#endif
 }
 
 
@@ -575,7 +578,8 @@ void main() {
     Ray ray = castRay(intersection); 
 
     if (ray.remainingBounces == -1) {
-        out_Col = vec4(missColor, 1.0);
+        // out_Col = vec4(missColor, 1.0);
+        out_Col = vec4(texture(u_Albedo, fs_UV).xyz, 1.0);
         return;
     }
 

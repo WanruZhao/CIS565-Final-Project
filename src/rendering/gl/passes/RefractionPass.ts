@@ -25,6 +25,9 @@ class RefractionPass extends ShaderProgram {
     unifProjInv: WebGLUniformLocation;
     unifFar: WebGLUniformLocation;
     unifBVH: WebGLUniformLocation;
+    unifRayDepth: WebGLUniformLocation;
+    unifUseBVH: WebGLUniformLocation;
+
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
@@ -48,6 +51,9 @@ class RefractionPass extends ShaderProgram {
         this.unifViewInv = gl.getUniformLocation(this.prog, "u_ViewInv");
         this.unifProjInv  = gl.getUniformLocation(this.prog, "u_ProjInv");
         this.unifFar = gl.getUniformLocation(this.prog, "u_Far");
+        this.unifRayDepth = gl.getUniformLocation(this.prog, "u_RayDepth");
+        this.unifUseBVH = gl.getUniformLocation(this.prog, "u_UseBVH");
+
     }
 
     drawElement(camera: Camera, 
@@ -61,6 +67,8 @@ class RefractionPass extends ShaderProgram {
                 scenetexheight: number,
                 BVHTexWidth: number, 
                 BVHTexHeight: number,
+                rayDepth: number,
+                useBVH: boolean
             ) {
 
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -81,6 +89,9 @@ class RefractionPass extends ShaderProgram {
         this.setViewInv(mat4.invert(mat4.create(), camera.viewMatrix));
         this.setProjInv(mat4.invert(mat4.create(), camera.projectionMatrix));
         this.setFar(camera.far);
+        this.setRayDepth(rayDepth);
+        this.setUseBVH(useBVH);
+
         
         for (let i = 0; i < targets.length; i ++) {
             gl.activeTexture(gl.TEXTURE0 + i + texSlotOffet);
@@ -161,6 +172,26 @@ class RefractionPass extends ShaderProgram {
         this.use();
         if(this.unifFar !== -1){
             gl.uniform1f(this.unifFar, far);
+        }
+      }
+
+      setRayDepth(depth: number)
+      {
+        this.use();
+        if(this.unifRayDepth !== -1){
+            gl.uniform1i(this.unifRayDepth, depth);
+        }
+      }
+
+      setUseBVH(useBVH: boolean)
+      {
+        this.use();
+        if(this.unifUseBVH !== -1){
+            if (useBVH) {
+                gl.uniform1i(this.unifUseBVH, 1);
+            } else {
+                gl.uniform1i(this.unifUseBVH, 0);
+            }
         }
       }
 
