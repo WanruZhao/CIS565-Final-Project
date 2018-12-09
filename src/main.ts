@@ -11,7 +11,7 @@ import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import { Scene, Material } from './scene/scene';
-import { buildKDTree } from './scene/BVH';
+import { buildKDTree, traverseKDTree } from './scene/BVH';
 import { WSAENETDOWN } from 'constants';
 
 const maxTextureSize : number = 4096;
@@ -74,7 +74,7 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = new Map<string, Texture>();
-  texture = new Texture('resources/textures/marble3.jpg');
+  texture = new Texture('resources/textures/numbers.jpg');
   textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
@@ -87,14 +87,14 @@ function loadScene() {
   textureSet = null;
   scene.addSceneElement(mesh, textureSet);
 
-  // load diamond mesh & textures
-  objString = loadOBJText('resources/obj/diamond.obj');
-  material = new Material(0.2, 0.0, 0.8, 0.0);  
-  baseColor = vec4.fromValues(1.0, 0.9, 0.9, 1.0);    
-  mesh = new Mesh(objString, material, baseColor);
-  mesh.create();
-  textureSet = null;
-  scene.addSceneElement(mesh, textureSet);
+  // // load diamond mesh & textures
+  // objString = loadOBJText('resources/obj/diamond.obj');
+  // material = new Material(0.2, 0.0, 0.8, 0.0);  
+  // baseColor = vec4.fromValues(1.0, 0.9, 0.9, 1.0);    
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
 
   // // load diamond mesh & textures
   // objString = loadOBJText('resources/obj/demo_diamond1.obj');
@@ -150,10 +150,35 @@ function loadScene() {
   // textureSet = null;
   // scene.addSceneElement(mesh, textureSet);
 
+  // //load cube mesh & textures
+  // objString = loadOBJText('resources/obj/cube.obj');
+  // material = new Material(1.0, 0.0, 0.0, 0.0);  
+  // baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+  // mesh = new Mesh(objString, material, baseColor);
+  // mesh.create();
+  // textureSet = null;
+  // scene.addSceneElement(mesh, textureSet);
+
+    //load cube mesh & textures
+  objString = loadOBJText('resources/obj/dragon.obj');
+  material = new Material(1.0, 0.0, 0.0, 0.0);  
+  baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = null;
+  scene.addSceneElement(mesh, textureSet);
+
+
+
   scene.buildSceneInfoTextures();
 
-  // build KDTree
-  // scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
+  // build KDTree texture
+  scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
+  scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
+  scene.buildBVHTextures();
+
+  console.log(scene.kdTreeNodeList);
+
 
 }
 
@@ -225,11 +250,11 @@ function main() {
     renderer.renderFromGBuffer(camera, scene.environment);
 
 
-    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
-    renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
-    renderer.raytraceComposeStage();
-    renderer.glow();
-    renderer.dof();
+    renderer.reflectionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.BVHTextures, scene.nodeCount, scene.textureSets, scene.environment);
+    // renderer.refractionStage(camera, scene.sceneInfoTextures, scene.triangleCount, scene.textureSets, scene.environment);
+    // renderer.raytraceComposeStage();
+    // renderer.glow();
+    // renderer.dof();
     
     
   //  renderer.shadowStage(camera, scene.sceneInfoTextures, scene.triangleCount);

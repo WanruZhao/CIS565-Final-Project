@@ -131,4 +131,73 @@ export class TextureBuffer
 	  }
 };
 
+export class BVHTextureBuffer {
+	static _pixelPerNode: number = 5;	
+	
+	_texture: WebGLTexture;
+	_buffer: Float32Array;
+	_nodeCount: number;
+	_width: number;
+	_height: number;
+	
+	constructor(nodeCount: number, maxTextureSize: number) {
+		// Initialize the texture. We use gl.NEAREST for texture filtering because we don't want to blend between values in the buffer. We want the exact value
+		this._texture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, this._texture);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		this._nodeCount = nodeCount;
+
+		this._width = Math.min(maxTextureSize, nodeCount);
+		this._height = Math.ceil(nodeCount / maxTextureSize) * BVHTextureBuffer._pixelPerNode;
+
+  		gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, this._width, this._height, 0, gl.RGBA, gl.FLOAT, null);
+		gl.bindTexture(gl.TEXTURE_2D, null);
+	
+		// Create a buffer to use to upload to the texture
+		this._buffer = new Float32Array(this._width * this._height * 4);
+	  }
+	
+	  get texture() {
+		return this._texture;
+	  }
+	
+	  get buffer() {
+		return this._buffer;
+	  }
+
+	  //--------------------------------------------------------
+	  // BVH texture structure
+	  // (isLeaf, leftIdx, rightIdx, 0)
+	  // AABB_min
+	  // AABB_max
+	  // triangleIDs
+	  // triangleIDs
+	  //--------------------------------------------------------
+	  bufferIndex(nodeIdx: number, elementIdx: number, bit: number){
+		let row = Math.floor(nodeIdx / this._width);
+		let col = nodeIdx - row * this._width;
+
+		let resultIdx = row * BVHTextureBuffer._pixelPerNode * this._width * 4 
+						+ elementIdx * this._width * 4 
+						+ col * 4 
+						+ bit;
+
+		return resultIdx;
+
+
+	  }
+
+	
+	  update() {
+			gl.bindTexture(gl.TEXTURE_2D, this._texture);
+			gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, this._width, this._height, gl.RGBA, gl.FLOAT, this._buffer);
+			gl.bindTexture(gl.TEXTURE_2D, null);
+	  }
+};
+
 export default Texture;
