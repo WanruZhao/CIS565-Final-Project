@@ -135,15 +135,8 @@ void main()
 
 
     vec3 rayorigin = worldPos.xyz + normalize(texture(u_Nor, pixel).xyz) * 0.001;
-    // vec3 raydir = (dynamiclightpos).xyz - rayorigin;
 
-    // float t = 10.0;
     vec4 col = texture(u_Albedo, pixel);
-    // if(isHit(raydir, rayorigin, t)) {
-    //     out_Col = vec4(col.xyz * 0.9, 1.0);
-    // } else {
-    //     out_Col = col;
-    // }
 
     float coef = shadowCoef(rayorigin, dynamiclightpos, 3);
     out_Col = vec4(col.xyz * (coef * 0.1 + 0.9), 1.0);

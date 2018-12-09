@@ -35,7 +35,7 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 30;
+const int MAX_DEPTH = 7;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
@@ -46,7 +46,7 @@ const int STACK_SIZE = 100;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
-#define USE_BVH 0
+#define USE_BVH 1
 
 
 struct Ray{
@@ -214,8 +214,8 @@ void calEnvUV(in vec3 dir, out vec2 uv)
 
 // calculate environment mapping parameters
 void calEnvUV(in vec3 pos, in vec3 nor, out vec2 uv) {
-    vec3 eye = normalize(pos - u_Camera);
-    vec3 r = normalize(reflect(eye, normalize(nor)));
+    // vec3 eye = normalize(pos - u_Camera);
+    vec3 r = nor; //normalize(reflect(eye, normalize(nor)));
     float a = r.x * r.x + r.y * r.y + r.z * r.z;
     float b = 2.0 * (r.x * pos.x + r.y * pos.y + r.z * pos.z);
     float c = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z) - u_Far * u_Far;
@@ -543,7 +543,7 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
    
     } else {
         vec2 envUV;
-        calEnvUV(intersection.position, intersection.normal, envUV);
+        calEnvUV(ray.origin, ray.direction, envUV);
         ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
         ray.remainingBounces = 0;   
         ray.hitLight = true;                           
@@ -557,7 +557,7 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
     } else {
         // ray.color = missColor;
         vec2 envUV;
-        calEnvUV(intersection.position, intersection.normal, envUV);
+        calEnvUV(ray.origin, ray.direction, envUV);
         ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
         ray.remainingBounces = 0;
         ray.hitLight = true;

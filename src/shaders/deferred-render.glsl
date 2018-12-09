@@ -56,7 +56,7 @@ void main() {
 	vec3 dynamiclightpos = u_LightPos.xyz;
 	//dynamiclightpos.x *= sin(u_Time);
 
-	float lambert = clamp(dot(normalize(col_0.xyz), normalize(dynamiclightpos- col_1.xyz)), 0.4, 1.0);
+	float lambert = clamp(dot(normalize(col_0.xyz), normalize(dynamiclightpos- col_1.xyz)), 0.8, 1.0);
 	if(col_3.w > 0.0) {
 		lambert = 1.0;
 	}
