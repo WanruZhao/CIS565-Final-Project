@@ -18,13 +18,13 @@ float gaussian(in float x, in float sigma)
 
 void main()
 {
-    const int range = 21;
+    const int range = 20;
     const int halfrange = (range - 1) / 2;
     float kernel[range];
     float depth = 1.0 - texture(u_Nor, fs_UV).w;
-    float d = abs(depth - 25.0) / 25.0;
+    float d = abs(depth - 20.0) / 20.0;
 
-    float sigma = 9.0 * d;
+    float sigma = 2.0 * d;
     float powersum = 0.0;
     for (int i = 0; i <= halfrange; ++i)
     {

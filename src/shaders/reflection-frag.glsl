@@ -40,9 +40,15 @@ const int MAX_DEPTH = 2;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
+const float PI = 3.14159265359;
+const float TWO_PI = 6.28318530718;
 const int STACK_SIZE = 100;
 
+
 vec3 missColor = vec3(0.0, 0.0, 0.0);
+
+#define USE_BVH 0
+
 
 struct Ray{
     vec3 origin;
@@ -194,16 +200,29 @@ TreeNode getTreeNode(int nodeIdX) {
     node.triangleIDs[7] = int(e4[3]);
 
     return node;
+}
     
+void calEnvUV(in vec3 dir, out vec2 uv)
+{
+	float phi = atan(dir.z, dir.x);
+	if(phi < 0.0) {
+		phi += TWO_PI;
+	}
+	float theta = acos(dir.y);
+	uv = vec2(1.0 - phi / TWO_PI, theta / PI - 1.0);
 }
 
 // calculate environment mapping parameters
 void calEnvUV(in vec3 pos, in vec3 nor, out vec2 uv) {
     vec3 eye = normalize(pos - u_Camera);
-    vec3 r = reflect(eye, normalize(nor));
-    float m = 2.0 * sqrt(pow(r.x, 2.0) + pow(r.y, 2.0) + pow( r.z + 1.0, 2.0));
-    uv = r.xy / m + 0.5;
-    uv.y *= -1.0;
+    vec3 r = normalize(reflect(eye, normalize(nor)));
+    float a = r.x * r.x + r.y * r.y + r.z * r.z;
+    float b = 2.0 * (r.x * pos.x + r.y * pos.y + r.z * pos.z);
+    float c = (pos.x * pos.x + pos.y * pos.y + pos.z * pos.z) - u_Far * u_Far;
+    float delta = sqrt(pow(b, 2.0) - 4.0 * a * c);
+    float t = (- b + delta) / (2.0 * a);
+    vec3 dir = normalize(pos + t * r);
+    calEnvUV(dir, uv);
 }
 
 // reference to 
@@ -354,10 +373,6 @@ bool intersectionCheckByBVH(in Ray ray, out int triangleIdx, out vec3 p1, out ve
 }
 
 
-
-
-
-
 bool intersectionCheck(in Ray ray, out int triangleIdx, out vec3 p1, out vec3 p2, out vec3 p3, out Intersection intersection) {
     vec3 temp_p1 = vec3(0.0);
     vec3 temp_p2 = vec3(0.0);
@@ -439,28 +454,6 @@ Ray castRay(out Intersection intersection) {
     return ray;
 }
 
-Ray castRay2(out Intersection intersection) {
-    Ray ray;
-
-    vec4 NDC = vec4(0.0, 0.0, 1.0, 1.0);
-    // lower left corner is (0, 0) for Frag_Coord
-    NDC.x = (gl_FragCoord.x / u_Width) * 2.0 - 1.0;
-    NDC.y = (gl_FragCoord.y / u_Height) * 2.0 - 1.0;
-
-    vec4 pixelWorldPos = u_ViewInv * u_ProjInv * (NDC * u_Far);
-    vec3 rayDir = normalize(pixelWorldPos.xyz - u_Camera); 
-
-    ray.hitLight = false;
-    ray.remainingBounces = MAX_DEPTH; 
-
-    ray.direction = rayDir;
-    ray.origin = u_Camera;
-    ray.color = vec3(1.0, 1.0, 1.0);  
-    ray.accuSpecular = 1.0;
-
-    return ray;
-}
-
 void shadeRay(in int triangleIdx, in vec3 p1, in vec3 p2, in vec3 p3, in Intersection intersection, out Ray ray) {    
 
     vec4 material = getTriangleMaterial(triangleIdx);
@@ -508,33 +501,30 @@ void raytrace(inout Ray ray, inout Intersection intersection) {
     int triangleIdx = -1;
     vec3 p1, p2, p3;
 
+#if USE_BVH
     //=============== use BVH ====================================
     if (intersectionCheckByBVH(ray, triangleIdx, p1, p2, p3, intersection)) {     
         shadeRay(triangleIdx, p1, p2, p3, intersection, ray);  
-                                                                                
-        
+   
     } else {
         vec2 envUV;
         calEnvUV(intersection.position, intersection.normal, envUV);
         ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-        ray.remainingBounces = 0;       
-
-                                                
-        
+        ray.remainingBounces = 0;                              
     }
     //============================================================
-    
+#else 
     //===============brute force loop============================
-    // if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersection)) {                
-    //     shadeRay(triangleIdx, p1, p2, p3, intersection, ray);
-    // } else {
-    //     vec2 envUV;
-    //     calEnvUV(intersection.position, intersection.normal, envUV);
-    //     ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-    //     ray.remainingBounces = 0;
-    // }
+    if (intersectionCheck(ray, triangleIdx, p1, p2, p3, intersection)) {                
+        shadeRay(triangleIdx, p1, p2, p3, intersection, ray);
+    } else {
+        vec2 envUV;
+        calEnvUV(intersection.position, intersection.normal, envUV);
+        ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+        ray.remainingBounces = 0;
+    }
     //============================================================
-    
+#endif
 }
 
 
@@ -560,6 +550,6 @@ void main() {
     
 
     out_Col = vec4(ray.color, 1.0); 
-    // out_Col = vec4(texture(u_BVH, fs_UV).xyz, 1.0);
+    // out_Col = vec4(texture(u_Albedo, fs_UV).xyz, 1.0);
 
 }

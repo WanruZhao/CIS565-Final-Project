@@ -17,11 +17,11 @@ float gaussian(in float x, in float sigma)
 
 void main()
 {
-    const int range = 100;
+    const int range = 75;
     const int halfrange = (range - 1) / 2;
     float kernel[range];
 
-    float sigma = 70.0;
+    float sigma = 50.0;
     float powersum = 0.0;
     for (int i = 0; i <= halfrange; ++i)
     {
@@ -59,11 +59,13 @@ void main()
         coloryx += kernel[halfrange + i] * texture(u_Glow, (fs_UV * vec2(u_Width, u_Height) + vec2(float(i), float(i))) / vec2(u_Width, u_Height)).rgb;
     }
 
+    float scale = 2.0;
 
-    colorx /= (powersum * 2.5);
-    colory /= (powersum * 2.5);
-    colorxy /= (powersum * 2.5);
-    coloryx /= (powersum * 2.5);
+
+    colorx /= (powersum * scale);
+    colory /= (powersum * scale);
+    colorxy /= (powersum * scale);
+    coloryx /= (powersum * scale);
     
     vec3 originColor = texture(u_frame, fs_UV).rgb;
     out_Col = vec4(colorx + colory + colorxy + coloryx + originColor, 1.0);

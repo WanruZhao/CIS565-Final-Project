@@ -18,6 +18,8 @@ uniform float u_Time;
 in vec2 fs_UV;
 out vec4 out_Col;
 
+const float lightscale = 0.5;
+
 /* optimization: BVH, backface culling */
 
 bool isIntersectWithTriangle(in vec3 raydir, in vec3 rayorigin, in vec3 p0, in vec3 p1, in vec3 p2, in vec3 normal, out float t) {
@@ -103,6 +105,25 @@ bool isHit(in vec3 raydir, in vec3 rayorigin, out float t) {
     return false;
 }
 
+float shadowCoef(in vec3 origin, in vec3 lightcenter, in int samplehalfside) {
+    float totalsample = pow(float(samplehalfside) + 1.0, 2.0);
+    float accum = 0.0;
+    float t;
+
+    for(int i = -samplehalfside; i <= samplehalfside; i++) {
+        for(int j = -samplehalfside; j <= samplehalfside; j++) {
+            vec3 pos = lightcenter + vec3(float(i) * lightscale, 0.0, float(j) * lightscale);
+            vec3 dir = pos - origin;
+            t = 10.0;
+            if(!isHit(dir, origin, t)) {
+                accum += 1.0;
+            }
+        }
+    }
+
+    return accum / totalsample;
+}
+
 void main()
 {
     // calculate launched ray from first hit point to light
@@ -110,21 +131,21 @@ void main()
     vec4 worldPos = texture(u_Pos, pixel);
 
     vec3 dynamiclightpos = u_LightPos.xyz;
-	dynamiclightpos.x *= sin(u_Time);
+	//dynamiclightpos.x *= sin(u_Time);
 
 
     vec3 rayorigin = worldPos.xyz + normalize(texture(u_Nor, pixel).xyz) * 0.001;
-    vec3 raydir = (dynamiclightpos).xyz - rayorigin;
+    // vec3 raydir = (dynamiclightpos).xyz - rayorigin;
 
-    vec3 hitpoint = vec3(0.0);
-    vec3 hitnormal = vec3(0.0);
-
-    float t = 10.0;
+    // float t = 10.0;
     vec4 col = texture(u_Albedo, pixel);
-    if(isHit(raydir, rayorigin, t)) {
-        out_Col = vec4(col.xyz * 0.5, 1.0);
-    } else {
-        out_Col = col;
-    }
+    // if(isHit(raydir, rayorigin, t)) {
+    //     out_Col = vec4(col.xyz * 0.9, 1.0);
+    // } else {
+    //     out_Col = col;
+    // }
+
+    float coef = shadowCoef(rayorigin, dynamiclightpos, 3);
+    out_Col = vec4(col.xyz * (coef * 0.1 + 0.9), 1.0);
 
 }
