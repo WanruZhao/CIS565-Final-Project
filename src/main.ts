@@ -117,6 +117,8 @@ function loadScene() {
 
   let environment : Texture;
 
+  // teste
+
   switch(controls.background) {
     case 'church':
       environment = new Texture('resources/textures/church.jpg');
