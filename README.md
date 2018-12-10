@@ -4,11 +4,13 @@ GPU Rasterized And Ray Traced Real Time Rendering Using WebGL
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Final Project**
 
 * Yuru Wang, Wanru Zhao
-* Tested on: **Google Chrome 62.0.3202.94** on Windows 10, i7-7700HQ @ 2.5GHz 128GB, GTX 1050 Ti 8GB (personal compute
+* Tested on: **Google Chrome 62.0.3202.94** on Windows 10, i7-7700HQ @ 2.5GHz 128GB, GTX 1050 Ti 8GB (personal computer) and **Google Chrome 71.0.3578.80** Windows 10, Intel(R) Core(TM) i7-8750H CPU@2.2GHz, GTX 1070 with Max-Q Design(Personal Laptop)
 
 ### Live Online
 
 ### Demo Video/Gif
+
+### Slides
 
 ## Project Description ##
 
