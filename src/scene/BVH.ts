@@ -4,7 +4,11 @@ const MAX_PRIMITIVES_IN_NODE = 8;
 const MIN_AABB_LENGTH = 0.001;
 
 
-let nodeCount = 0;
+let  nodeCount = 0;
+
+export function restNodeCount() {
+    nodeCount = 0;
+}
 
 export class KDTreeNode {
     id: number

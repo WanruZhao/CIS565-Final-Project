@@ -554,6 +554,6 @@ void main() {
     
 
     out_Col = vec4(ray.color, 1.0); 
-    // out_Col = vec4(texture(u_Albedo, fs_UV).xyz, 1.0);
+    // out_Col = vec4(texture(u_SceneInfo, fs_UV).xyz, 1.0);
 
 }
