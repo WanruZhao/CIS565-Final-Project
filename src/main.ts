@@ -26,7 +26,7 @@ audioLoader.load( './resources/sound/BGM.mp3', function( buffer: any ) {
 	sound.setBuffer( buffer );
 	sound.setLoop( true );
 	sound.setVolume( 0.3 );
-  sound.play();
+  // sound.play();
 });
 
 
@@ -174,7 +174,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      //scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond2.obj');
@@ -183,7 +183,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond3.obj');
@@ -192,7 +192,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond4.obj');
@@ -201,7 +201,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond5.obj');
@@ -210,7 +210,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond6.obj');
@@ -219,7 +219,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
     break;
 
     case 'cubes':
@@ -242,18 +242,33 @@ function loadScene() {
       scene.addSceneElement(mesh, textureSet);
     break;
 
+    case 'test':
+          // // load diamond mesh & textures
+      objString = loadOBJText('resources/obj/cube.obj');
+      material = new Material(0.2, 0.0, 0.8, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+    break;
+
     default:
   }
 
-
-
-  scene.buildSceneInfoTextures();
 
   // build KDTree texture
   scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
 
   scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
+  scene.getCorrectOder();
   scene.buildBVHTextures();
+  console.log(scene.correctOrder);
+
+
+  scene.buildSceneInfoTextures();
+
+
 
 
 }
