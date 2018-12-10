@@ -270,7 +270,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamonds', 'cubes']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon']).onChange(loadScene);
 
     // background
     function setBackground() {
