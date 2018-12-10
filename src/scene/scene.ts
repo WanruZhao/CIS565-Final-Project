@@ -85,6 +85,8 @@ export class Primitive {
     points: Array<vec4>
     id: number
     aabb: AABB
+    meshid: number
+    meshlocalid: number
 
     constructor(p1: vec4, p2: vec4, p3:  vec4, id: number) {
         this.points = new Array<vec4>();
@@ -167,6 +169,8 @@ export class Scene {
         let count = this.primitives.length;
         mesh.primitives.forEach(primitive => {
             primitive.id = count++;
+            primitive.meshid = this.meshes.length - 1;
+            primitive.meshlocalid = primitive.id - this.triangleCount;
             this.primitives.push(primitive);
         });
 
@@ -201,51 +205,51 @@ export class Scene {
           }
         }
 
-        let currentCount = 0;
-        for(let i = 0; i < this.meshes.length; i++) {
-            for(let j = 0; j < this.meshes[i].count / 3; j++) {
-                let vertexIdx = [this.meshes[i].indices[j * 3], this.meshes[i].indices[j * 3 + 1], this.meshes[i].indices[j * 3 + 2]];
-                let textureIdx = Math.floor((currentCount + j) / maxTriangleCountPerTexture);
-                let localTriangleIdx = currentCount + j - textureIdx * maxTriangleCountPerTexture;
+        for(let order = 0; order < this.correctOrder.length; order++) {
+            let primitiveIdx = this.correctOrder[order];
+            let i = this.primitives[primitiveIdx].meshid;
+            let j = this.primitives[primitiveIdx].meshlocalid;
 
-                for(let k = 0; k < 3; k++) {
-                    // position
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 0)] = this.meshes[i].positions[4 * vertexIdx[k]];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 1)] = this.meshes[i].positions[4 * vertexIdx[k] + 1];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 2)] = this.meshes[i].positions[4 * vertexIdx[k] + 2];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 3)] = 1.0;
+            let vertexIdx = [this.meshes[i].indices[j * 3], this.meshes[i].indices[j * 3 + 1], this.meshes[i].indices[j * 3 + 2]];
+            let textureIdx = Math.floor(order / maxTriangleCountPerTexture);
+            let localTriangleIdx = order - textureIdx * maxTriangleCountPerTexture;
 
-                    // normal
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 0)] = this.meshes[i].normals[4 * vertexIdx[k]];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 1)] = this.meshes[i].normals[4 * vertexIdx[k] + 1];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 2)] = this.meshes[i].normals[4 * vertexIdx[k] + 2];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 3)] = 0.0;
+            for(let k = 0; k < 3; k++) {
+                // position
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 0)] = this.meshes[i].positions[4 * vertexIdx[k]];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 1)] = this.meshes[i].positions[4 * vertexIdx[k] + 1];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 2)] = this.meshes[i].positions[4 * vertexIdx[k] + 2];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.POSITION, k, 3)] = 1.0;
 
-                    // uv and texture id
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 0)] = this.meshes[i].uvs[2 * vertexIdx[k]];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 1)] = this.meshes[i].uvs[2 * vertexIdx[k] + 1];
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 2)] = i * 1.0 + 1.0;   // textureID
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 3)] = 0.0;
-                
-                    let p = vec3.fromValues(this.meshes[i].positions[4 * vertexIdx[k]], this.meshes[i].positions[4 * vertexIdx[k] + 1], this.meshes[i].positions[4 * vertexIdx[k] + 2]);
-                    // debugger
-                
-                }
+                // normal
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 0)] = this.meshes[i].normals[4 * vertexIdx[k]];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 1)] = this.meshes[i].normals[4 * vertexIdx[k] + 1];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 2)] = this.meshes[i].normals[4 * vertexIdx[k] + 2];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.NORMAL, k, 3)] = 0.0;
 
-
-                // base color
-                for(let k = 0; k < 4; k++) {
-                    this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.BASECOLOR,0, k)] = this.meshes[i].baseColor[k];
-                }
-                
-                // material
-                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 0)] = this.meshes[i].material.specular;
-                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 1)] = this.meshes[i].material.diffuse;
-                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 2)] = this.meshes[i].material.refraction;
-                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 3)] = this.meshes[i].material.emittance;
-                
+                // uv and texture id
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 0)] = this.meshes[i].uvs[2 * vertexIdx[k]];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 1)] = this.meshes[i].uvs[2 * vertexIdx[k] + 1];
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 2)] = i * 1.0 + 1.0;   // textureID
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.UV, k, 3)] = 0.0;
+            
+                let p = vec3.fromValues(this.meshes[i].positions[4 * vertexIdx[k]], this.meshes[i].positions[4 * vertexIdx[k] + 1], this.meshes[i].positions[4 * vertexIdx[k] + 2]);
+                // debugger
+            
             }
-            currentCount = currentCount + this.meshes[i].count / 3;
+
+
+            // base color
+            for(let k = 0; k < 4; k++) {
+                this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.BASECOLOR,0, k)] = this.meshes[i].baseColor[k];
+            }
+            
+            // material
+            this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 0)] = this.meshes[i].material.specular;
+            this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 1)] = this.meshes[i].material.diffuse;
+            this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 2)] = this.meshes[i].material.refraction;
+            this.sceneInfoTextures[textureIdx]._buffer[this.sceneInfoTextures[textureIdx].bufferIndex(localTriangleIdx, ELEMENT_TYPE.MATERIAL,0, 3)] = this.meshes[i].material.emittance;
+                    
         }
 
         for(let i = 0; i < this.sceneInfoTextures.length; i++) {

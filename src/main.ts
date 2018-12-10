@@ -35,7 +35,7 @@ const maxTextureSize : number = 4096;
 // Define an object with application parameters and button callbacks
 const controls = {
   music: true,
-  model: 'test',
+  model: 'diamonds',
   background: 'church',
   rendering: {
     reflection: {
@@ -138,7 +138,7 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = null;
-  scene.addSceneElement(mesh, textureSet);
+  //scene.addSceneElement(mesh, textureSet);
 
   switch(controls.model) {
     case 'diamonds':
@@ -158,7 +158,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      //scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond2.obj');
@@ -167,7 +167,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      //scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond3.obj');
@@ -176,7 +176,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      //scene.addSceneElement(mesh, textureSet);
 
       // // // load diamond mesh & textures
       // objString = loadOBJText('resources/obj/demo_diamond4.obj');
@@ -239,6 +239,7 @@ function loadScene() {
 
     default:
   }
+
 
   // build KDTree texture
   scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
