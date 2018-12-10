@@ -10,7 +10,9 @@ GPU Rasterized And Ray Traced Real Time Rendering Using WebGL
 [Live Demo](https://wanruzhao.github.io/CIS565-Final-Project/)
 
 ### Demo Video/Gif
-![](images/demo1.gif)
+<p align="middle">
+  <img src="images/demo1.gif" width="600"/>
+</p>
 
 ### Slides
 [Slides](https://docs.google.com/presentation/d/1IV-hGhshcx--qwChoxhV8sUtsPJW2yRIfDSoRfvkCAE/edit?usp=sharing)
