@@ -35,6 +35,13 @@ A list of features implemented in this project is as follows:
 
 ## Results ##
 
+<p align="middle">
+  <img src="images/cover1.png"/>
+  <img src="images/cover2.png"/>
+  <img src="images/cover3.png"/>
+</p>
+
+
 **Texture mapping**
 ![](images/texture.png)
 
@@ -84,6 +91,52 @@ The reflection, refraction and direct lighting are done in seperate passes. We b
 ![](images/BVH.png)
 
 Since our models are all meshes, performance drops heavily when using high poly meshes. We used BVH(Bounding box hierachy) and KD Tree to accelerate the intersection checking between ray and triangles. The KD tree is constructed and flattened on CPU, encoded in WebGL textures, and traversed on GPU. Above image is the BVH texture used in shader.
+
+**Environment Mapping**
+
+![](images/environment.png)
+
+For ray traced reflection and refraction, we use spherical environment mapping as termination result.
+
+**Shadow**
+
+| Hard Shadow | Soft Shadow (25 samples) | Soft Shadow (121 samples) |
+|------|------|------|
+| ![](images/hardshadow.png) | ![](images/softshadow_25.png) | ![](images/softshadow_121.png) |
+
+We use scene information stored as a texture and light position information to calculate shadow. Hard shadow comes from a point light. And soft shadows are from area light.
+
+**Dispersion**
+
+| Without Dispersion | With Dispersion |
+|------|------|
+| ![](images/withoutdis.png) | ![](images/dis.png) |
+
+**Glow**
+
+| Without Glow | With Glow |
+|------|------|
+| ![](images/withoutglow.png) | ![](images/glow.png) |
+
+
+**Depth of Field**
+
+![](images/dof.png)
+
+**FXAA**
+
+| Without AA | With AA |
+|------|------|
+| ![](images/withoutaa.png) | ![](images/aa.png) |
+
+Because we are using deferred shading, anti-alisaing methods like SSAA and SMAA are costly and not suitable. Thus, FXAA is applied to enhance the quality of our final rendering slightly.
+
+**Global Illumination**
+
+![](images/gi.png)
+
+We attemped to implement global illumination using light map and color bleeding. However, it is not completely correct and not applied to our final scene since we do not have much diffuse objects.
+
 
 ## Performance Analysis ##
  ![](images/performance.png) 
