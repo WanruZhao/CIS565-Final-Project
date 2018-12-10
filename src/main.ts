@@ -120,16 +120,16 @@ function loadScene() {
 
 
 
-  // // load table mesh & textures
-  // objString = loadOBJText('resources/obj/demo_floor.obj');
-  // material = new Material(0.5, 0.5, 0.0, 0.0);
-  // baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
-  // mesh = new Mesh(objString, material, baseColor);
-  // mesh.create();
-  // textureSet = new Map<string, Texture>();
-  // texture = new Texture('resources/textures/marble6.jpg');
-  // textureSet.set('tex_Albedo', texture);
-  // scene.addSceneElement(mesh, textureSet);
+  // load table mesh & textures
+  objString = loadOBJText('resources/obj/demo_floor.obj');
+  material = new Material(0.5, 0.5, 0.0, 0.0);
+  baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);
+  mesh = new Mesh(objString, material, baseColor);
+  mesh.create();
+  textureSet = new Map<string, Texture>();
+  texture = new Texture('resources/textures/marble6.jpg');
+  textureSet.set('tex_Albedo', texture);
+  scene.addSceneElement(mesh, textureSet);
 
   // load light mesh && textures
   objString = loadOBJText('resources/obj/demo_light.obj');
@@ -138,7 +138,7 @@ function loadScene() {
   mesh = new Mesh(objString, material, baseColor);
   mesh.create();
   textureSet = null;
-  //scene.addSceneElement(mesh, textureSet);
+  scene.addSceneElement(mesh, textureSet);
 
   switch(controls.model) {
     case 'diamonds':
@@ -151,32 +151,32 @@ function loadScene() {
       textureSet = null;
       scene.addSceneElement(mesh, textureSet);
 
-      // load diamond mesh & textures
-      objString = loadOBJText('resources/obj/demo_diamond1.obj');
-      material = new Material(0.2, 0.0, 0.8, 0.0);  
-      baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
-      mesh = new Mesh(objString, material, baseColor);
-      mesh.create();
-      textureSet = null;
-      //scene.addSceneElement(mesh, textureSet);
-
       // // load diamond mesh & textures
-      objString = loadOBJText('resources/obj/demo_diamond2.obj');
-      material = new Material(0.2, 0.0, 0.8, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 0.9, 1.0);    
-      mesh = new Mesh(objString, material, baseColor);
-      mesh.create();
-      textureSet = null;
-      //scene.addSceneElement(mesh, textureSet);
+      // objString = loadOBJText('resources/obj/demo_diamond1.obj');
+      // material = new Material(0.2, 0.0, 0.8, 0.0);  
+      // baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
+      // mesh = new Mesh(objString, material, baseColor);
+      // mesh.create();
+      // textureSet = null;
+      // scene.addSceneElement(mesh, textureSet);
 
-      // // load diamond mesh & textures
-      objString = loadOBJText('resources/obj/demo_diamond3.obj');
-      material = new Material(0.2, 0.0, 0.8, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
-      mesh = new Mesh(objString, material, baseColor);
-      mesh.create();
-      textureSet = null;
-      //scene.addSceneElement(mesh, textureSet);
+      // // // load diamond mesh & textures
+      // objString = loadOBJText('resources/obj/demo_diamond2.obj');
+      // material = new Material(0.2, 0.0, 0.8, 0.0);  
+      // baseColor = vec4.fromValues(0.9, 1.0, 0.9, 1.0);    
+      // mesh = new Mesh(objString, material, baseColor);
+      // mesh.create();
+      // textureSet = null;
+      // scene.addSceneElement(mesh, textureSet);
+
+      // // // load diamond mesh & textures
+      // objString = loadOBJText('resources/obj/demo_diamond3.obj');
+      // material = new Material(0.2, 0.0, 0.8, 0.0);  
+      // baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
+      // mesh = new Mesh(objString, material, baseColor);
+      // mesh.create();
+      // textureSet = null;
+      // scene.addSceneElement(mesh, textureSet);
 
       // // // load diamond mesh & textures
       // objString = loadOBJText('resources/obj/demo_diamond4.obj');
@@ -275,7 +275,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamonds', 'cubes']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon']).onChange(loadScene);
 
     // background
     function setBackground() {

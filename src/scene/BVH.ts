@@ -1,6 +1,6 @@
 import { Primitive, AABB } from './scene';
 
-const MAX_PRIMITIVES_IN_NODE = 8;
+const MAX_PRIMITIVES_IN_NODE = 32;
 const MIN_AABB_LENGTH = 0.001;
 
 
