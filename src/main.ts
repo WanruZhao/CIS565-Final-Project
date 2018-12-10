@@ -352,6 +352,7 @@ function loadScene() {
   scene.getCorrectOder();
   scene.buildBVHTextures();
   scene.buildSceneInfoTextures();
+  console.log(scene.kdTreeNodeList);
 
 
 
