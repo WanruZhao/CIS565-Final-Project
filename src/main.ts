@@ -157,6 +157,16 @@ function loadScene() {
   scene.addSceneElement(mesh, textureSet);
 
   switch(controls.model) {
+    case 'diamond':
+        // load diamond mesh & textures
+      objString = loadOBJText('resources/obj/diamond.obj');
+      material = new Material(0.3, 0.0, 0.7, 0.0);  
+      baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+    break;
     case 'diamonds':
         // load diamond mesh & textures
       objString = loadOBJText('resources/obj/diamond.obj');
@@ -220,6 +230,7 @@ function loadScene() {
       mesh.create();
       textureSet = null;
       scene.addSceneElement(mesh, textureSet);
+
     break;
 
     case 'emeralds':
@@ -342,7 +353,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon', 'emeralds']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamond', 'diamonds', 'cubes', 'dragon', 'emeralds']).onChange(loadScene);
 
     // background
     function setBackground() {
