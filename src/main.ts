@@ -11,7 +11,7 @@ import Texture, {TextureBuffer} from './rendering/gl/Texture';
 import { GUI } from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import { Scene, Material } from './scene/scene';
-import { buildKDTree, traverseKDTree } from './scene/BVH';
+import { buildKDTree, traverseKDTree, restNodeCount } from './scene/BVH';
 import { WSAENETDOWN } from 'constants';
 
 const THREE = require('three');
@@ -46,7 +46,7 @@ const controls = {
       rayDepth: 2
     },
     refraction: {
-      on: true,
+      on: false,
       dispersion: false,
       rayDepth: 10
     },
@@ -101,13 +101,12 @@ function loadOBJText(path: string): string {
 
 function loadScene() {
 
-  console.log("load scene");
-
   meshes = [];
   triangleCount = 0;
 
   scene && scene.destroy();
   scene = new Scene();
+  restNodeCount();
 
   let objString;
   let mesh;
