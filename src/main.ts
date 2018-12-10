@@ -26,7 +26,7 @@ audioLoader.load( './resources/sound/BGM.mp3', function( buffer: any ) {
 	sound.setBuffer( buffer );
 	sound.setLoop( true );
 	sound.setVolume( 0.3 );
-  sound.play();
+  // sound.play();
 });
 
 
@@ -245,6 +245,7 @@ function loadScene() {
   scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
   scene.getCorrectOder();
   scene.buildBVHTextures();
+  console.log(scene.correctOrder);
 
 
   scene.buildSceneInfoTextures();

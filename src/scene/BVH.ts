@@ -93,6 +93,8 @@ export function traverseKDTree(root: KDTreeNode): KDTreeNode[] {
         return node1.id - node2.id;
     });
 
+    console.log('nodeList', nodeList);
+
     return nodeList;
 }
 
