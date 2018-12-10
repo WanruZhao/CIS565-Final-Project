@@ -35,7 +35,7 @@ const maxTextureSize : number = 4096;
 // Define an object with application parameters and button callbacks
 const controls = {
   music: true,
-  model: 'cubes',
+  model: 'diamonds',
   background: 'church',
   rendering: {
     shadow: {
@@ -46,7 +46,7 @@ const controls = {
       rayDepth: 2
     },
     refraction: {
-      on: false,
+      on: true,
       dispersion: false,
       rayDepth: 10
     },
@@ -100,6 +100,7 @@ function loadOBJText(path: string): string {
 
 
 function loadScene() {
+
   meshes = [];
   triangleCount = 0;
 
@@ -121,14 +122,19 @@ function loadScene() {
       environment = new Texture('resources/textures/church.jpg');
       scene.addEnvironmentTexture(environment);
     break;
-
+    case 'Panorama':
+      environment = new Texture('resources/textures/Panorama.jpg');
+      scene.addEnvironmentTexture(environment);
+    break;
+    case 'harbor':
+      environment = new Texture('resources/textures/harbor.jpg');
+      scene.addEnvironmentTexture(environment);
+    break;
     default:
       environment = new Texture('resources/textures/church.jpg');
       scene.addEnvironmentTexture(environment);
 
   }
-
-
 
   // load table mesh & textures
   objString = loadOBJText('resources/obj/demo_floor.obj');
@@ -141,7 +147,7 @@ function loadScene() {
   textureSet.set('tex_Albedo', texture);
   scene.addSceneElement(mesh, textureSet);
 
-  // load light mesh && textures
+    // load light mesh && textures
   objString = loadOBJText('resources/obj/demo_light.obj');
   material = new Material(0.0, 1.0, 0.0, 2.0);  
   baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);  
@@ -168,7 +174,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      //scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond2.obj');
@@ -177,7 +183,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond3.obj');
@@ -186,7 +192,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond4.obj');
@@ -195,7 +201,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond5.obj');
@@ -204,7 +210,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond6.obj');
@@ -213,12 +219,12 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
     break;
 
     case 'cubes':
       objString = loadOBJText('resources/obj/cubes.obj');
-      material = new Material(1.0, 0.0, 0.0, 0.0);  
+      material = new Material(0.2, 0.0, 0.8, 0.0);  
       baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
@@ -245,6 +251,7 @@ function loadScene() {
 
   // build KDTree texture
   scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
+
   scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
   scene.buildBVHTextures();
 
@@ -276,14 +283,20 @@ function setupGUI() {
     function setBackground() {
       switch(controls.background) {
         case 'church':
+          scene.addEnvironmentTexture(new Texture('resources/textures/church.jpg'));
         break;
-
+        case 'Panorama':
+          scene.addEnvironmentTexture(new Texture('resources/textures/Panorama.jpg'));
+        break;
+        case 'harbor':
+          scene.addEnvironmentTexture(new Texture('resources/textures/harbor.jpg'));
+        break;
         default:
       }
 
     }
-    gui.add(controls, 'background', ['church']).onChange(setBackground);
-    setBackground();
+    gui.add(controls, 'background', ['church', 'Panorama', 'harbor']).onChange(setBackground);
+
 
     
 

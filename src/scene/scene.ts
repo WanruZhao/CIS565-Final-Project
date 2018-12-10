@@ -319,7 +319,7 @@ export class Scene {
             this.BVHTextures[i].update();
         }
 
-        console.log(this.BVHTextures[0]._buffer);
+        // console.log(this.BVHTextures[0]._buffer);
         
     }
 
@@ -327,7 +327,7 @@ export class Scene {
         for (let mesh of this.meshes.values()) {
             mesh.destroy();
         }
-        this.meshes = null
+        this.meshes = null;
     }
 
 }
