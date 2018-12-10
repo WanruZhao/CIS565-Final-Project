@@ -186,15 +186,14 @@ bool intersectionCheckInNode(in Ray ray, in TreeNode node, out int triangleIdx, 
         vec3 intersectionPos = intersection.position;
         if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionPos)) {
             float dist = length(intersectionPos - ray.origin);
-            if (dist <= minDist) {
-                minDist = dist;
-                triangleIdx = currTriangleIdx;
-                p1 = temp_p1;
-                p2 = temp_p2;
-                p3 = temp_p3;
-                intersection.position = intersectionPos;
-                intersection.normal = getTriangleNormal(currTriangleIdx);
-            }
+            minDist = dist;
+            triangleIdx = currTriangleIdx;
+            p1 = temp_p1;
+            p2 = temp_p2;
+            p3 = temp_p3;
+            intersection.position = intersectionPos;
+            intersection.normal = getTriangleNormal(currTriangleIdx);
+            break;
         }
     }
 
@@ -247,14 +246,13 @@ bool intersectionCheckByBVH(in Ray ray, out int triangleIdx, out vec3 p1, out ve
 
             if (intersectionCheckInNode(ray, node, temp_intersectTriangleIdx, temp_p1, temp_p2, temp_p3, temp_intersection)) {
                 float dist = length(temp_intersection.position - ray.origin);
-                if (dist <= minDist) {
-                    minDist = dist;
-                    triangleIdx = temp_intersectTriangleIdx;
-                    p1 = temp_p1;
-                    p2 = temp_p2;
-                    p3 = temp_p3;
-                    intersection = temp_intersection;
-                }
+                minDist = dist;
+                triangleIdx = temp_intersectTriangleIdx;
+                p1 = temp_p1;
+                p2 = temp_p2;
+                p3 = temp_p3;
+                intersection = temp_intersection;
+                break;
             }
             
         } else {
@@ -329,8 +327,21 @@ bool isHit(in vec3 raydir, in vec3 rayorigin, out float t) {
             }
         }
     }
+    //Ray ray;
+    // ray.origin = rayorigin;
+    // ray.direction = raydir;
+    // Intersection intersection;
+    // vec3 p0, p1, p2;
+    // int id;
+    // if (intersectionCheckByBVH(ray, id, p0, p1, p2, intersection))
+    // {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
 
     return false;
+
 }
 
 float shadowCoef(in vec3 origin, in vec3 lightcenter, in int samplehalfside) {
