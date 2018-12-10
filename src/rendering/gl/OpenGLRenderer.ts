@@ -25,12 +25,16 @@ import { stat } from 'fs';
 
 class OpenGLRenderer {
   renderState:{  // temp values
+    shadow: {
+      on: false,
+    },
     reflection: {
       on: true,
       rayDepth: 2
     },
     refraction: {
       on: true,
+      dispersion: false,
       rayDepth: 10
     },
     ssaa: {
@@ -38,9 +42,15 @@ class OpenGLRenderer {
     },
     glow: {
       on: false,
+      threshold: 0.95,
+      range: 75,
+      blur: 7.0,
+      brightness: 0.5,
     },
     DOF: {
       on: false,
+      focal: 20.0,
+      radius: 5.0,
     },
     useBVH: true,
     
@@ -565,6 +575,9 @@ class OpenGLRenderer {
               BVHTextures: BVHTextureBuffer[], 
               nodeCount: number,     
             ){
+    if(!this.renderState.shadow.on) {
+      return;
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowBuffer);
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     let textures: WebGLTexture[] = [];
@@ -617,9 +630,11 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    // textures.push(this.originalTargetFromGBuffer);
-    textures.push(this.shadowTarget);
-    // textures.push(this.raytraceComposeBuffer);
+    if(this.renderState.shadow.on) {
+      textures.push(this.shadowTarget);
+    } else {
+      textures.push(this.originalTargetFromGBuffer);
+    }
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -673,8 +688,11 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    textures.push(this.originalTargetFromGBuffer);
-    // textures.push(this.shadowTarget);
+    if(this.renderState.shadow.on) {
+      textures.push(this.shadowTarget);
+    } else {
+      textures.push(this.originalTargetFromGBuffer);
+    }
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -694,7 +712,8 @@ class OpenGLRenderer {
                                     sceneInfo[0]._width, sceneInfo[0]._height,  
                                     BVHTextures[0]._width, BVHTextures[0]._height,
                                     this.renderState.refraction.rayDepth,
-                                    this.renderState.useBVH);
+                                    this.renderState.useBVH,
+                                    this.renderState.refraction.dispersion);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -709,9 +728,11 @@ class OpenGLRenderer {
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
-    // textures.push(this.shadowTarget); 
-
-    textures.push(this.originalTargetFromGBuffer);    
+    if(this.renderState.shadow.on) {
+      textures.push(this.shadowTarget); 
+    } else {
+      textures.push(this.originalTargetFromGBuffer); 
+    }
     if (this.renderState.reflection.on && this.renderState.refraction.on) {
       textures.push(this.reflectionTarget);
       textures.push(this.refractionTarget);
@@ -770,7 +791,7 @@ class OpenGLRenderer {
       textures.push(this.raytraceComposeTarget);
     }
 
-    this.glowSourcePass.drawElement(this.canvas, textures);
+    this.glowSourcePass.drawElement(this.canvas, textures, this.renderState.glow.threshold, 0.0, 0.0, 0.0);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -787,7 +808,12 @@ class OpenGLRenderer {
       textures.push(this.raytraceComposeTarget);
     }
     textures.push(this.glowSourceTarget);
-    this.glowPass.drawElement(this.canvas, textures);
+    this.glowPass.drawElement(this.canvas,
+                              textures, 
+                              0.0, 
+                              this.renderState.glow.range,
+                              this.renderState.glow.blur,
+                              this.renderState.glow.brightness);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -809,7 +835,7 @@ class OpenGLRenderer {
       textures.push(this.raytraceComposeTarget);
     }
     textures.push(this.gbTargets[0]);
-    this.dofPass.drawElement(this.canvas, textures);
+    this.dofPass.drawElement(this.canvas, textures, this.renderState.DOF.focal, this.renderState.DOF.radius);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   }

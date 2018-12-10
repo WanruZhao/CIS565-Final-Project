@@ -38,12 +38,16 @@ const controls = {
   model: 'diamonds',
   background: 'church',
   rendering: {
+    shadow: {
+      on: false,
+    },
     reflection: {
       on: true,
       rayDepth: 2
     },
     refraction: {
       on: true,
+      dispersion: false,
       rayDepth: 10
     },
     ssaa: {
@@ -51,9 +55,15 @@ const controls = {
     },
     glow: {
       on: false,
+      threshold: 0.95,
+      range: 75,
+      blur: 7.0,
+      brightness: 0.5,
     },
     DOF: {
       on: false,
+      focal: 20.0,
+      radius: 5.0,
     },
     useBVH: true,  
     
@@ -284,6 +294,11 @@ function setupGUI() {
     let renderingFolder = gui.addFolder('rendering');  
     renderingFolder.open();    
 
+    // shadow
+    let shadowFolder = renderingFolder.addFolder('shadow');
+    shadowFolder.add(controls.rendering.shadow, 'on').onChange(setRenderingState);
+    shadowFolder.close();
+
     // reflection
     let reflectionFolder = renderingFolder.addFolder('reflection');  
     reflectionFolder.add(controls.rendering.reflection, 'on').onChange(setRenderingState);
@@ -293,22 +308,29 @@ function setupGUI() {
     // refraction
     let refractionFolder = renderingFolder.addFolder('refraction');  
     refractionFolder.add(controls.rendering.refraction, 'on').onChange(setRenderingState);
+    refractionFolder.add(controls.rendering.refraction, 'dispersion').onChange(setRenderingState);
     refractionFolder.add(controls.rendering.refraction, 'rayDepth', 2, 20).step(5).onChange(setRenderingState);
     refractionFolder.close();
 
     // ssaa
-    let ssaaFolder = renderingFolder.addFolder('ssaa');  
+    let ssaaFolder = renderingFolder.addFolder('fxaa');  
     ssaaFolder.add(controls.rendering.ssaa, `on`).onChange(setRenderingState);
     ssaaFolder.close();
 
     // glow
     let glowFolder = renderingFolder.addFolder('glow');  
     glowFolder.add(controls.rendering.glow, `on`).onChange(setRenderingState);
+    glowFolder.add(controls.rendering.glow, 'threshold', 0.90, 0.99).onChange(setRenderingState);
+    // glowFolder.add(controls.rendering.glow, 'range', 75, 100).onChange(setRenderingState);
+    glowFolder.add(controls.rendering.glow, 'blur', 1, 50).onChange(setRenderingState);
+    glowFolder.add(controls.rendering.glow, 'brightness', 0.4, 1.0).onChange(setRenderingState);
     glowFolder.close();
 
     // DOF
     let DOFFolder = renderingFolder.addFolder('DOF');  
     DOFFolder.add(controls.rendering.DOF, `on`).onChange(setRenderingState);
+    DOFFolder.add(controls.rendering.DOF, `focal`, 10.0, 50.0).onChange(setRenderingState);
+    DOFFolder.add(controls.rendering.DOF, `radius`, 2.0, 10.0).onChange(setRenderingState);
     DOFFolder.close();
 
     // BVH

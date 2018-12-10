@@ -11,13 +11,25 @@ class GlowPass extends ShaderProgram {
 
     unifFrame: WebGLUniformLocation;
     unifGlow: WebGLUniformLocation;
+    unifThreshold: WebGLUniformLocation;
+    unifRange: WebGLUniformLocation;
+    unifBlur: WebGLUniformLocation;
+    unifBrightness: WebGLUniformLocation;
+
+    
 
 
-	constructor(vertShaderSource: string, fragShaderSource: string) {
+    constructor(vertShaderSource: string, 
+                fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
 		let fragShader: Shader = new Shader(gl.FRAGMENT_SHADER, fragShaderSource);
 		super([vertShader, fragShader]);
-		this.use();
+        this.use();
+        
+        this.unifThreshold  = gl.getUniformLocation(this.prog, "u_Threshold");
+        this.unifRange = gl.getUniformLocation(this.prog, "u_Range");
+        this.unifBlur = gl.getUniformLocation(this.prog, "u_Blur");
+        this.unifBrightness = gl.getUniformLocation(this.prog, "u_Brightness");
 
 		if (this.screenQuad === undefined) {
 			this.screenQuad = new Square(vec3.fromValues(0, 0, 0));
@@ -26,7 +38,12 @@ class GlowPass extends ShaderProgram {
         
     }
 
-    drawElement(canvas: HTMLCanvasElement, targets: WebGLTexture[]) {
+    drawElement(canvas: HTMLCanvasElement,
+                targets: WebGLTexture[],
+                threshold: number,
+                range: number,
+                blur: number,
+                brightness: number) {
 
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.disable(gl.DEPTH_TEST);
@@ -36,6 +53,10 @@ class GlowPass extends ShaderProgram {
 
         this.setHeight(canvas.height);
         this.setWidth(canvas.width);
+        this.setThreshold(threshold);
+        this.setRange(range);
+        this.setBlur(blur);
+        this.setBrightness(brightness);
 
         for(let i = 0; i < targets.length; i++) {
             gl.activeTexture(gl.TEXTURE0 + i);
@@ -44,7 +65,35 @@ class GlowPass extends ShaderProgram {
         
 
   		super.draw(this.screenQuad);
-      }
+    }
+
+    setThreshold(th: number) {
+        this.use();
+        if(this.unifThreshold != -1) {
+            gl.uniform1f(this.unifThreshold, th);
+        }
+    }
+
+    setRange(rg: number) {
+        this.use();
+        if(this.unifRange != -1) {
+            gl.uniform1i(this.unifRange, rg);
+        }
+    }
+
+    setBlur(bl: number) {
+        this.use();
+        if(this.unifBlur != -1) {
+            gl.uniform1f(this.unifBlur, bl);
+        }
+    }
+
+    setBrightness(br: number) {
+        this.use();
+        if(this.unifBrightness != -1) {
+            gl.uniform1f(this.unifBrightness, br);
+        }
+    }
       
 
 

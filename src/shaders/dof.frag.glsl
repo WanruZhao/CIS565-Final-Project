@@ -7,6 +7,9 @@ uniform sampler2D u_Nor;
 uniform float u_Width;
 uniform float u_Height;
 
+uniform float u_focal;
+uniform float u_radius;
+
 in vec2 fs_UV;
 out vec4 out_Col;
 
@@ -22,9 +25,9 @@ void main()
     const int halfrange = (range - 1) / 2;
     float kernel[range];
     float depth = 1.0 - texture(u_Nor, fs_UV).w;
-    float d = abs(depth - 20.0) / 20.0;
+    float d = abs(depth - u_focal) / u_focal;
 
-    float sigma = 2.0 * d;
+    float sigma = u_radius * d;
     float powersum = 0.0;
     for (int i = 0; i <= halfrange; ++i)
     {

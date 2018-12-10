@@ -27,6 +27,7 @@ class RefractionPass extends ShaderProgram {
     unifBVH: WebGLUniformLocation;
     unifRayDepth: WebGLUniformLocation;
     unifUseBVH: WebGLUniformLocation;
+    unifUseDispersion: WebGLUniformLocation;
 
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
@@ -53,7 +54,7 @@ class RefractionPass extends ShaderProgram {
         this.unifFar = gl.getUniformLocation(this.prog, "u_Far");
         this.unifRayDepth = gl.getUniformLocation(this.prog, "u_RayDepth");
         this.unifUseBVH = gl.getUniformLocation(this.prog, "u_UseBVH");
-
+        this.unifUseDispersion = gl.getUniformLocation(this.prog, "u_UseDispersion");
     }
 
     drawElement(camera: Camera, 
@@ -68,7 +69,8 @@ class RefractionPass extends ShaderProgram {
                 BVHTexWidth: number, 
                 BVHTexHeight: number,
                 rayDepth: number,
-                useBVH: boolean
+                useBVH: boolean,
+                useDispersion: boolean,
             ) {
 
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -91,6 +93,7 @@ class RefractionPass extends ShaderProgram {
         this.setFar(camera.far);
         this.setRayDepth(rayDepth);
         this.setUseBVH(useBVH);
+        this.setUseDispersion(useDispersion);
 
         
         for (let i = 0; i < targets.length; i ++) {
@@ -193,6 +196,17 @@ class RefractionPass extends ShaderProgram {
                 gl.uniform1i(this.unifUseBVH, 0);
             }
         }
+      }
+
+      setUseDispersion(use: boolean) {
+          this.use();
+          if(this.unifUseDispersion != -1) {
+              if(use) {
+                  gl.uniform1i(this.unifUseDispersion, 1);
+              } else {
+                gl.uniform1i(this.unifUseDispersion, 0);
+              }
+          }
       }
 
 

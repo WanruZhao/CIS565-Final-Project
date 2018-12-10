@@ -41,7 +41,8 @@ class ShadowPass extends ShaderProgram {
 
         this.unifNodeCount  = gl.getUniformLocation(this.prog, "u_NodeCount"); 
         this.unifBVHTexWidth = gl.getUniformLocation(this.prog, "u_BVHTexWidth");
-        this.unifBVHTexHeight = gl.getUniformLocation(this.prog, "u_BVHTexHeight"); 
+        this.unifBVHTexHeight = gl.getUniformLocation(this.prog, "u_BVHTexHeight");
+        
 	}
 
     drawElement(camera: Camera, 

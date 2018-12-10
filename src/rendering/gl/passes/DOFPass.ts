@@ -10,13 +10,17 @@ class DOFPass extends ShaderProgram {
     
     unifNor: WebGLUniformLocation;
     unifFrame: WebGLUniformLocation;
-
+    unifFocal: WebGLUniformLocation;
+    unifRadius: WebGLUniformLocation;
 
 	constructor(vertShaderSource: string, fragShaderSource: string) {
 		let vertShader: Shader = new Shader(gl.VERTEX_SHADER,  vertShaderSource);	
 		let fragShader: Shader = new Shader(gl.FRAGMENT_SHADER, fragShaderSource);
 		super([vertShader, fragShader]);
-		this.use();
+        this.use();
+        
+        this.unifFocal  = gl.getUniformLocation(this.prog, "u_focal");
+        this.unifRadius = gl.getUniformLocation(this.prog, "u_radius");
 
 		if (this.screenQuad === undefined) {
 			this.screenQuad = new Square(vec3.fromValues(0, 0, 0));
@@ -25,7 +29,7 @@ class DOFPass extends ShaderProgram {
         
     }
 
-    drawElement(canvas: HTMLCanvasElement, targets: WebGLTexture[]) {
+    drawElement(canvas: HTMLCanvasElement, targets: WebGLTexture[], focal: number, radius: number) {
 
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         gl.disable(gl.DEPTH_TEST);
@@ -35,16 +39,30 @@ class DOFPass extends ShaderProgram {
 
         this.setHeight(canvas.height);
         this.setWidth(canvas.width);
+        this.setFocal(focal);
+        this.setRadius(radius);
 
         for(let i = 0; i < targets.length; i++) {
             gl.activeTexture(gl.TEXTURE0 + i);
-          gl.bindTexture(gl.TEXTURE_2D, targets[i]);
+            gl.bindTexture(gl.TEXTURE_2D, targets[i]);
         }
-        
 
   		super.draw(this.screenQuad);
       }
       
+      setFocal(focal: number) {
+          this.use();
+          if(this.unifFocal != -1) {
+              gl.uniform1f(this.unifFocal, focal);
+          }
+      }
+
+      setRadius(radius: number) {
+        this.use();
+        if(this.unifRadius != -1) {
+            gl.uniform1f(this.unifRadius, radius);
+        }
+    }
 
 
 }

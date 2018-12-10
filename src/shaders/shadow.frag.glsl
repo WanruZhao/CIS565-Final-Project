@@ -352,6 +352,12 @@ float shadowCoef(in vec3 origin, in vec3 lightcenter, in int samplehalfside) {
     return accum / totalsample;
 }
 
+// float clamp(float x, float a, float b) {
+//     if(x > b) return b;
+//     else if(x < a) return a;
+//     else return x;
+// }
+
 void main()
 {
     // calculate launched ray from first hit point to light
@@ -367,8 +373,8 @@ void main()
     vec4 col = texture(u_Albedo, pixel);
 
     float coef = shadowCoef(rayorigin, dynamiclightpos, 3);
-    out_Col = vec4(col.xyz * (coef * 0.1 + 0.9), 1.0);
+    out_Col = vec4(col.xyz * clamp(coef * 0.15 + 0.85, 0.0, 1.0), 1.0);
     
-    out_Col = texture(u_Albedo, fs_UV);
+    // out_Col = texture(u_Albedo, fs_UV);
 
 }

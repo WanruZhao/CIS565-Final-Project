@@ -33,6 +33,7 @@ uniform float u_Far;
 
 uniform int u_RayDepth;
 uniform int u_UseBVH;
+uniform int u_UseDispersion;
 
 
 
@@ -55,7 +56,6 @@ const float ior_b = 2.432;
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 
 #define USE_BVH 1
-#define DISPERSION 1
 
 struct Ray{
     vec3 origin;
@@ -577,91 +577,90 @@ void raytrace(in float ior, inout Ray ray, inout Intersection intersection) {
 
 void main() {   
 
-#if DISPERSION 
+    if(u_UseDispersion == 1) {
 
-    Intersection intersectionR, intersectionG, intersectionB;
-    Ray rayR = castRay(ior_r, intersectionR), rayG = castRay(ior_g, intersectionG), rayB = castRay(ior_b, intersectionB);
+        Intersection intersectionR, intersectionG, intersectionB;
+        Ray rayR = castRay(ior_r, intersectionR), rayG = castRay(ior_g, intersectionG), rayB = castRay(ior_b, intersectionB);
 
-    vec4 colorR, colorG, colorB;
+        vec4 colorR, colorG, colorB;
 
-    if (rayR.remainingBounces == -1) {
-        colorR = vec4(missColor, 1.0);
-    } else {
-        while (rayR.remainingBounces > 0) {       
-            raytrace(ior_r, rayR, intersectionR);
+        if (rayR.remainingBounces == -1) {
+            colorR = vec4(missColor, 1.0);
+        } else {
+            while (rayR.remainingBounces > 0) {       
+                raytrace(ior_r, rayR, intersectionR);
+            }
+            if (!rayR.hitLight) {
+                //------------------------------------------------------------
+                vec2 envUV;
+                calEnvUV(rayR.origin, rayR.direction, envUV);
+                rayR.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+                //------------------------------------------------------------
+                rayR.color *= 0.8;  // decrese color intensity for rays > maxDepth
+            }
+            colorR = vec4(rayR.color, 1.0);   
         }
-        if (!rayR.hitLight) {
+
+        if (rayG.remainingBounces == -1) {
+            colorG = vec4(missColor, 1.0);
+        } else {
+            while (rayG.remainingBounces > 0) {       
+                raytrace(ior_g, rayG, intersectionG);
+            }
+            if (!rayG.hitLight) {
+                //------------------------------------------------------------
+                vec2 envUV;
+                calEnvUV(rayG.origin, rayG.direction, envUV);
+                rayG.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+                //------------------------------------------------------------
+                rayG.color *= 0.8;  // decrese color intensity for rays > maxDepth
+            }
+            colorG = vec4(rayG.color, 1.0);   
+        }
+
+        if (rayB.remainingBounces == -1) {
+            colorB = vec4(missColor, 1.0);
+        } else {
+            while (rayB.remainingBounces > 0) {       
+                raytrace(ior_b, rayB, intersectionB);
+            }
+            if (!rayB.hitLight) {
+                //------------------------------------------------------------
+                vec2 envUV;
+                calEnvUV(rayB.origin, rayB.direction, envUV);
+                rayB.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+                //------------------------------------------------------------
+                rayB.color *= 0.8;  // decrese color intensity for rays > maxDepth
+            }
+            colorB = vec4(rayB.color, 1.0);   
+        }
+
+        out_Col = vec4(colorR.r, colorG.g, colorB.b, 1.0);
+
+    } else {
+        Intersection intersection;
+        Ray ray = castRay(indexOfRefraction, intersection); 
+
+        if (ray.remainingBounces == -1) {
+            // out_Col = vec4(missColor, 1.0);
+            out_Col = vec4(texture(u_Albedo, fs_UV).xyz, 1.0);
+            return;
+        }
+
+        while (ray.remainingBounces > 0) {       
+            raytrace(indexOfRefraction, ray, intersection);
+        }
+
+        if (!ray.hitLight) {
             //------------------------------------------------------------
             vec2 envUV;
-            calEnvUV(rayR.origin, rayR.direction, envUV);
-            rayR.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
+            calEnvUV(ray.origin, ray.direction, envUV);
+            ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
             //------------------------------------------------------------
-            rayR.color *= 0.8;  // decrese color intensity for rays > maxDepth
+            ray.color *= 0.8;  // decrese color intensity for rays > maxDepth
         }
-        colorR = vec4(rayR.color, 1.0);   
+            
+        out_Col = vec4(ray.color, 1.0);   
     }
-
-    if (rayG.remainingBounces == -1) {
-        colorG = vec4(missColor, 1.0);
-    } else {
-        while (rayG.remainingBounces > 0) {       
-            raytrace(ior_g, rayG, intersectionG);
-        }
-        if (!rayG.hitLight) {
-            //------------------------------------------------------------
-            vec2 envUV;
-            calEnvUV(rayG.origin, rayG.direction, envUV);
-            rayG.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-            //------------------------------------------------------------
-            rayG.color *= 0.8;  // decrese color intensity for rays > maxDepth
-        }
-        colorG = vec4(rayG.color, 1.0);   
-    }
-
-    if (rayB.remainingBounces == -1) {
-        colorB = vec4(missColor, 1.0);
-    } else {
-        while (rayB.remainingBounces > 0) {       
-            raytrace(ior_b, rayB, intersectionB);
-        }
-        if (!rayB.hitLight) {
-            //------------------------------------------------------------
-            vec2 envUV;
-            calEnvUV(rayB.origin, rayB.direction, envUV);
-            rayB.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-            //------------------------------------------------------------
-            rayB.color *= 0.8;  // decrese color intensity for rays > maxDepth
-        }
-        colorB = vec4(rayB.color, 1.0);   
-    }
-
-    out_Col = vec4(colorR.r, colorG.g, colorB.b, 1.0);
-
-
-#else
-    Intersection intersection;
-    Ray ray = castRay(indexOfRefraction, intersection); 
-
-    if (ray.remainingBounces == -1) {
-        // out_Col = vec4(missColor, 1.0);
-        out_Col = vec4(texture(u_Albedo, fs_UV).xyz, 1.0);
-        return;
-    }
-
-    while (ray.remainingBounces > 0) {       
-        raytrace(ray, intersection);
-    }
-
-    if (!ray.hitLight) {
-        //------------------------------------------------------------
-        vec2 envUV;
-        calEnvUV(ray.origin, ray.direction, envUV);
-        ray.color *= texture(u_EnvMap, envUV).rgb * envEmittance;
-        //------------------------------------------------------------
-        ray.color *= 0.8;  // decrese color intensity for rays > maxDepth
-    }
-        
-    out_Col = vec4(ray.color, 1.0);   
-#endif
 
 }

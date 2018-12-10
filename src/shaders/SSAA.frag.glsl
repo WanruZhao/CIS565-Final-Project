@@ -9,53 +9,12 @@ uniform float u_Height;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const float FXAA_SUBPIX_SHIFT = 0.0; //1.0/4.0;
+const float FXAA_SUBPIX_SHIFT = 1.0/4.0;
 const float FXAA_SPAN_MAX = 8.0;
-const float FXAA_REDUCE_MUL = 0.0; //1.0/64.0;
+const float FXAA_REDUCE_MUL = 1.0/8.0;
 const float FXAA_REDUCE_MIN = 1.0/128.0;
 
-// #define FXAA
-
-// float gaussian(in float x, in float sigma)
-// {
-// 	return 0.39894 * exp(-0.5 * x * x / (sigma * sigma)) / sigma;
-// }
-
-// void main()
-// {
-//     const int samplehalfside = 11;
-//     const int totalcount = 2 * samplehalfside + 1;
-
-//     float sigma = 0.5;
-//     float powersum = 0.0;
-//     float kernel[totalcount];
-
-//     for (int i = 0; i <= samplehalfside; ++i)
-//     {
-//         kernel[samplehalfside + i] = kernel[samplehalfside - i] = gaussian(float(i), sigma);
-//     }
-
-//     for (int i = 0; i < totalcount; ++i)
-//     {
-//         powersum += kernel[i];
-//     }
-
-//     float scalex = 1.0 / (u_Width );
-//     float scaley = 1.0 / (u_Height);
-
-//     vec3 color = vec3(0.0);
-//     for(int i = -samplehalfside; i <= samplehalfside; i++) {
-//         for(int j = -samplehalfside; j <= samplehalfside; j++) {
-//             vec2 offset = vec2(float(i) * scalex, float(j) * scaley);
-//             color += kernel[samplehalfside + i] * kernel[samplehalfside + j] *
-//                     texture(u_frame, (fs_UV + offset)).rgb;
-//         }
-//     }
-
-//     color /= powersum;
-
-//     out_Col = vec4(color, 1.0);
-// }
+#define FXAA
 
 // Reference: https://www.geeks3d.com/20110405/fxaa-fast-approximate-anti-aliasing-demo-glsl-opengl-test-radeon-geforce/3/
 vec3 fxaaPixelShader(in vec2 fragCoord) 
