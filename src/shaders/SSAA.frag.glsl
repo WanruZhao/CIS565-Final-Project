@@ -12,7 +12,9 @@ out vec4 out_Col;
 const float FXAA_SUBPIX_SHIFT = 0.0; //1.0/4.0;
 const float FXAA_SPAN_MAX = 8.0;
 const float FXAA_REDUCE_MUL = 0.0; //1.0/64.0;
-const float FXAA_REDUCE_MIN = 0.0;//1.0/128.0;
+const float FXAA_REDUCE_MIN = 1.0/128.0;
+
+// #define FXAA
 
 // float gaussian(in float x, in float sigma)
 // {
@@ -103,8 +105,10 @@ vec3 fxaaPixelShader(in vec2 fragCoord)
 void main()
 {
     vec2 uv = gl_FragCoord.xy / vec2(u_Width, u_Height);
-    //uv.y = 1.0 - uv.y;
     vec2 fragCoord = uv * vec2(u_Width, u_Height);
-    out_Col = vec4(fxaaPixelShader(fragCoord), 1.0);
-    // out_Col = texture(u_frame, uv);
+#ifdef FXAA
+        out_Col = vec4(fxaaPixelShader(fragCoord), 1.0);
+#else
+        out_Col = texture(u_frame, uv);
+#endif
 }

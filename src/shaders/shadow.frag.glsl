@@ -368,9 +368,7 @@ void main()
 
     float coef = shadowCoef(rayorigin, dynamiclightpos, 3);
     out_Col = vec4(col.xyz * (coef * 0.1 + 0.9), 1.0);
-
-    // out_Col = vec4(texture(u_BVH, fs_UV).xyz, 1.0);
     
-
+    out_Col = texture(u_Albedo, fs_UV);
 
 }

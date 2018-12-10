@@ -589,6 +589,7 @@ class OpenGLRenderer {
     textures.push(this.gbTargets[0]);
     // textures.push(this.originalTargetFromGBuffer);
     textures.push(this.shadowTarget);
+    // textures.push(this.raytraceComposeBuffer);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -689,7 +690,8 @@ class OpenGLRenderer {
 
     let textures : WebGLTexture[];
     textures = [];
-    textures.push(this.raytraceComposeTarget);
+    // textures.push(this.raytraceComposeTarget);
+    textures.push(this.ssaaTarget);
     this.glowSourcePass.drawElement(this.canvas, textures);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);

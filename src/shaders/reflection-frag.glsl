@@ -36,7 +36,7 @@ uniform float u_Far;
 in vec2 fs_UV;
 out vec4 out_Col;
 
-const int MAX_DEPTH = 2;
+const int MAX_DEPTH = 4;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 const float envEmittance = 1.0;
