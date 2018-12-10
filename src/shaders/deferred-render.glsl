@@ -69,8 +69,11 @@ void main() {
 
 	if(isBackground) {
 		out_Col = texture(u_EnvMap, uv);
+		
+		
 	} else {
 		out_Col = vec4(col_2.rgb * lambert, 1.0);
+		
 	}
 	
 }

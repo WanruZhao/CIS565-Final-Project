@@ -26,7 +26,7 @@ audioLoader.load( './resources/sound/BGM.mp3', function( buffer: any ) {
 	sound.setBuffer( buffer );
 	sound.setLoop( true );
 	sound.setVolume( 0.3 );
-  // sound.play();
+  sound.play();
 });
 
 
@@ -35,7 +35,7 @@ const maxTextureSize : number = 4096;
 // Define an object with application parameters and button callbacks
 const controls = {
   music: true,
-  model: 'emeralds',
+  model: 'diamonds',
   background: 'church',
   rendering: {
     shadow: {
@@ -43,7 +43,7 @@ const controls = {
     },
     reflection: {
       on: true,
-      rayDepth: 2
+      rayDepth: 3
     },
     refraction: {
       on: true,
@@ -198,7 +198,7 @@ function loadScene() {
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond3.obj');
       material = new Material(0.2, 0.0, 0.8, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
+      baseColor = vec4.fromValues(0.7, 1.0, 1.0, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
@@ -288,7 +288,7 @@ function loadScene() {
 
     case 'dragon':
       objString = loadOBJText('resources/obj/dragon.obj');
-      material = new Material(1.0, 0.0, 0.0, 0.0);  
+      material = new Material(0.0, 0.2, 0.8, 0.0);  
       baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
@@ -296,10 +296,34 @@ function loadScene() {
       scene.addSceneElement(mesh, textureSet);
     break;
 
-    case 'crystals':
-      objString = loadOBJText('resources/obj/crystals.obj');
-      material = new Material(1.0, 0.0, 0.0, 0.0);  
+    case 'rings':
+      objString = loadOBJText('resources/obj/rings.obj');
+      material = new Material(0.5, 0.5, 0.0, 0.0);  
+      baseColor = vec4.fromValues(0.9, 0.9, 0.7, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/stone1.obj');
+      material = new Material(0.2, 0.2, 0.6, 0.0);  
+      baseColor = vec4.fromValues(1.0, 0.9, 0.9, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/stone2.obj');
+      material = new Material(0.2, 0.2, 0.6, 0.0);  
       baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/stone3.obj');
+      material = new Material(0.2, 0.2, 0.6, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 0.9, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
@@ -353,7 +377,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamond', 'diamonds', 'cubes', 'dragon', 'emeralds']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamond', 'diamonds', 'cubes', 'dragon', 'emeralds', 'rings']).onChange(loadScene);
 
     // background
     function setBackground() {
