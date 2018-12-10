@@ -222,6 +222,56 @@ function loadScene() {
       scene.addSceneElement(mesh, textureSet);
     break;
 
+    case 'emeralds':
+      objString = loadOBJText('resources/obj/emerald.obj');
+      material = new Material(0.2, 0.5, 0.3, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/emerald1.obj');
+      material = new Material(0.2, 0.5, 0.3, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/emerald2.obj');
+      material = new Material(0.2, 0.5, 0.3, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/emerald3.obj');
+      material = new Material(0.2, 0.5, 0.3, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/emerald4.obj');
+      material = new Material(0.2, 0.5, 0.3, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+
+      objString = loadOBJText('resources/obj/emerald5.obj');
+      material = new Material(0.2, 0.5, 0.3, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+    break;
+
     case 'cubes':
       objString = loadOBJText('resources/obj/cubes.obj');
       material = new Material(0.2, 0.0, 0.8, 0.0);  
@@ -292,7 +342,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon', 'emeralds']).onChange(loadScene);
 
     // background
     function setBackground() {
