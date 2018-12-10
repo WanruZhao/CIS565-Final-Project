@@ -28,7 +28,7 @@ void main() {
     vec3 color;
     color = reflection * specularProp + albedo * diffuseProp + refraction * refractionProp;
     out_Col = vec4(color, 1.0);
-    // out_Col = vec4(texture(u_Albedo, fs_UV).xyz, 1.0);
+    // out_Col = vec4(texture(u_Refraction, fs_UV).xyz, 1.0);
 }
 
 

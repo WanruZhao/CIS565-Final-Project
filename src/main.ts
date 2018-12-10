@@ -35,7 +35,7 @@ const maxTextureSize : number = 4096;
 // Define an object with application parameters and button callbacks
 const controls = {
   music: true,
-  model: 'diamonds',
+  model: 'diamond',
   background: 'church',
   rendering: {
     shadow: {
