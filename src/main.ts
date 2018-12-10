@@ -174,7 +174,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      //scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond2.obj');
@@ -183,7 +183,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond3.obj');
@@ -192,7 +192,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond4.obj');
@@ -201,7 +201,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond5.obj');
@@ -210,7 +210,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond6.obj');
@@ -219,7 +219,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      // scene.addSceneElement(mesh, textureSet);
+      scene.addSceneElement(mesh, textureSet);
     break;
 
     case 'cubes':
@@ -277,7 +277,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamonds', 'cubes']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon']).onChange(loadScene);
 
     // background
     function setBackground() {
