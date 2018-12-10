@@ -15,6 +15,20 @@ GPU Rasterized And Ray Traced Real Time Rendering Using WebGL
 [Slides](https://docs.google.com/presentation/d/1IV-hGhshcx--qwChoxhV8sUtsPJW2yRIfDSoRfvkCAE/edit?usp=sharing)
 
 ## Project Description ##
+This project implements bybrid real time raytracing using WebGL. This project is originally inspired by Rigid Gems and referred to the hybrid rendering pipleline introduced in the presentation of SHINY PIXELS AND BEYOND: REAL-TIME RAYTRACING AT SEED.
+
+A list of features implemented in this project is as follows:
+* Rasterization and GBuffer: Stored the rasterized data (world position, normal, albedo color, material) in the gbuffer
+* OBJ loading: loaded obj model with webgl-obj-loader
+* Texture mapping: added texture to models, UV interpolation
+* Ray traced reflection: ray traced specular reflection
+* Ray traced refraction: used snell's law for ray's direction and include intenal reflection inside models based on critical angle.
+* Ray traced soft/hard shadow
+* Environment mapping
+* Post processing (glow, DOF)
+* Dispersion
+* FXAA
+* BVH and KDTree: constructed and flattened BVH tree on CPU, encode it in WebGL texture and traverse the tree on GPU
 
 ## Results ##
 
@@ -59,6 +73,7 @@ GPU Rasterized And Ray Traced Real Time Rendering Using WebGL
 ![](images/BVH.png)
 
 ## Performance Analysis ##
+ ![](images/performance.png) 
 
 ### Credits
 
