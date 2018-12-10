@@ -35,7 +35,7 @@ const maxTextureSize : number = 4096;
 // Define an object with application parameters and button callbacks
 const controls = {
   music: true,
-  model: 'diamond',
+  model: 'diamonds',
   background: 'church',
   rendering: {
     shadow: {
@@ -51,17 +51,17 @@ const controls = {
       rayDepth: 10
     },
     ssaa: {
-      on: false,
+      on: true,
     },
     glow: {
-      on: false,
+      on: true,
       threshold: 0.95,
       range: 75,
       blur: 7.0,
       brightness: 0.5,
     },
     DOF: {
-      on: false,
+      on: true,
       focal: 20.0,
       radius: 5.0,
     },
@@ -353,7 +353,6 @@ function loadScene() {
   scene.buildBVHTextures();
   scene.buildSceneInfoTextures();
   console.log(scene.kdTreeNodeList);
-
 
 
 
