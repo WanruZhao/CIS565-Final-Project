@@ -263,9 +263,6 @@ export class Scene {
         for(let i = 0; i < this.sceneInfoTextures.length; i++) {
             this.sceneInfoTextures[i].update();
         }
-
-        console.log(this.sceneInfoTextures[0]._buffer);
-
     }
 
     buildBVHTextures() {
@@ -338,8 +335,6 @@ export class Scene {
             this.BVHTextures[i].update();
         }
 
-        // console.log(this.BVHTextures[0]._buffer);
-        // debugger
         
     }
 

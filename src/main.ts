@@ -35,7 +35,7 @@ const maxTextureSize : number = 4096;
 // Define an object with application parameters and button callbacks
 const controls = {
   music: true,
-  model: 'diamonds',
+  model: 'emeralds',
   background: 'church',
   rendering: {
     shadow: {
@@ -223,13 +223,6 @@ function loadScene() {
     break;
 
     case 'emeralds':
-      objString = loadOBJText('resources/obj/emerald.obj');
-      material = new Material(0.2, 0.5, 0.3, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
-      mesh = new Mesh(objString, material, baseColor);
-      mesh.create();
-      textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
 
       objString = loadOBJText('resources/obj/emerald1.obj');
       material = new Material(0.2, 0.5, 0.3, 0.0);  
@@ -241,7 +234,7 @@ function loadScene() {
 
       objString = loadOBJText('resources/obj/emerald2.obj');
       material = new Material(0.2, 0.5, 0.3, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      baseColor = vec4.fromValues(1.0, 0.9, 1.0, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
@@ -249,7 +242,7 @@ function loadScene() {
 
       objString = loadOBJText('resources/obj/emerald3.obj');
       material = new Material(0.2, 0.5, 0.3, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      baseColor = vec4.fromValues(1.0, 1.0, 0.9, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
@@ -257,7 +250,7 @@ function loadScene() {
 
       objString = loadOBJText('resources/obj/emerald4.obj');
       material = new Material(0.2, 0.5, 0.3, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      baseColor = vec4.fromValues(0.9, 0.8, 1.0, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
@@ -265,7 +258,7 @@ function loadScene() {
 
       objString = loadOBJText('resources/obj/emerald5.obj');
       material = new Material(0.2, 0.5, 0.3, 0.0);  
-      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      baseColor = vec4.fromValues(0.9, 1.0, 0.8, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
@@ -284,6 +277,16 @@ function loadScene() {
 
     case 'dragon':
       objString = loadOBJText('resources/obj/dragon.obj');
+      material = new Material(1.0, 0.0, 0.0, 0.0);  
+      baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+    break;
+
+    case 'crystals':
+      objString = loadOBJText('resources/obj/crystals.obj');
       material = new Material(1.0, 0.0, 0.0, 0.0);  
       baseColor = vec4.fromValues(0.9, 1.0, 1.0, 1.0);    
       mesh = new Mesh(objString, material, baseColor);
@@ -313,9 +316,6 @@ function loadScene() {
   scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
   scene.getCorrectOder();
   scene.buildBVHTextures();
-  console.log(scene.correctOrder);
-
-
   scene.buildSceneInfoTextures();
 
 

@@ -279,7 +279,6 @@ class OpenGLRenderer {
 
   setRenderState(state: {}) {
     this.renderState = Object.assign({}, this.renderState, state);
-    console.log('new state', this.renderState);
   }
 
   setClearColor(r: number, g: number, b: number, a: number) {
