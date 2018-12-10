@@ -201,7 +201,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond5.obj');
@@ -210,7 +210,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       // // load diamond mesh & textures
       objString = loadOBJText('resources/obj/demo_diamond6.obj');
@@ -219,7 +219,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      //scene.addSceneElement(mesh, textureSet);
     break;
 
     case 'cubes':
