@@ -74,7 +74,7 @@ struct TreeNode{
     vec3 AABB_min;
     vec3 AABB_max;
     int startIdx;
-    int endIdx
+    int endIdx;
 };
 
 vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3, 
