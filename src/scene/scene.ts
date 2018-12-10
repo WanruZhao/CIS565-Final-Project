@@ -327,7 +327,7 @@ export class Scene {
         for (let mesh of this.meshes.values()) {
             mesh.destroy();
         }
-        this.meshes = null
+        this.meshes = null;
     }
 
 }
