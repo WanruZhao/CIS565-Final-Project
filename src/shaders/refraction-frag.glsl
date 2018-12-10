@@ -51,7 +51,7 @@ const int STACK_SIZE = 100;
 
 const float ior_r = 2.408;
 const float ior_g = 2.424;
-const float ior_b = 2.432;
+const float ior_b = 2.440;
 
 vec3 missColor = vec3(0.0, 0.0, 0.0);
 

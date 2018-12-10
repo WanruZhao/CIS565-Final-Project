@@ -264,7 +264,7 @@ export class Scene {
             this.sceneInfoTextures[i].update();
         }
 
-        console.log(this.sceneInfoTextures[0]._buffer);
+        // console.log(this.sceneInfoTextures[0]._buffer);
 
     }
 

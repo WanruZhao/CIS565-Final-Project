@@ -28,7 +28,7 @@ const float lightscale = 0.5;
 const float EPSILON = 0.0001;
 const float FLT_MAX = 1000000.0;
 
-
+#define USEBVH
 
 const int STACK_SIZE = 100;
 
@@ -133,7 +133,8 @@ bool rayIntersectsTriangle(in vec3 rayOrigin,
                            in vec3 p0,
                            in vec3 p1,
                            in vec3 p2,
-                           out vec3 intersection)
+                           out vec3 intersection,
+                           inout float t)
 {
     const float EPSILON = 0.0000001;
     vec3 edge1, edge2, h, s, q;
@@ -154,7 +155,7 @@ bool rayIntersectsTriangle(in vec3 rayOrigin,
     if (v < 0.0 || u + v > 1.0)
         return false;
     // At this stage we can compute t to find out where the intersection point is on the line.
-    float t = f * dot(edge2, q);
+    t = f * dot(edge2, q);
     if (t > EPSILON) // ray intersection
     {
         intersection = rayOrigin + rayDir * t;
@@ -164,7 +165,7 @@ bool rayIntersectsTriangle(in vec3 rayOrigin,
         return false;
 }
 
-bool intersectionCheckInNode(in Ray ray, in TreeNode node, out int triangleIdx, out vec3 p1, out vec3 p2, out vec3 p3, out Intersection intersection) {
+bool intersectionCheckInNode(in Ray ray, in TreeNode node, out int triangleIdx, out vec3 p1, out vec3 p2, out vec3 p3, out Intersection intersection, inout float t) {
     vec3 temp_p1 = vec3(0.0);
     vec3 temp_p2 = vec3(0.0);
     vec3 temp_p3 = vec3(0.0);
@@ -175,24 +176,28 @@ bool intersectionCheckInNode(in Ray ray, in TreeNode node, out int triangleIdx, 
         int currTriangleIdx = i;
         getTrianglePosition(currTriangleIdx, temp_p1, temp_p2, temp_p3);
         vec3 intersectionPos = intersection.position;
-        if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionPos)) {
-            float dist = length(intersectionPos - ray.origin);
-            minDist = dist;
-            triangleIdx = currTriangleIdx;
-            p1 = temp_p1;
-            p2 = temp_p2;
-            p3 = temp_p3;
-            intersection.position = intersectionPos;
-            intersection.normal = getTriangleNormal(currTriangleIdx);
-            break;
+        if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionPos, t)) {
+            if(t > 0.0 && t < 1.0) {
+                float dist = length(intersectionPos - ray.origin);
+                minDist = dist;
+                triangleIdx = currTriangleIdx;
+                p1 = temp_p1;
+                p2 = temp_p2;
+                p3 = temp_p3;
+                intersection.position = intersectionPos;
+                intersection.normal = getTriangleNormal(currTriangleIdx);
+                return true;
+            }
         }
     }
 
-    if (minDist < FLT_MAX) {
-        return true;
-    } else {
-        return false;
-    }
+    // if (minDist < FLT_MAX) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
+
+    return false;
 
 
 }
@@ -234,16 +239,18 @@ bool intersectionCheckByBVH(in Ray ray, out int triangleIdx, out vec3 p1, out ve
             int temp_intersectTriangleIdx = -1;
             vec3 temp_p1, temp_p2, temp_p3;
             Intersection temp_intersection; 
-
-            if (intersectionCheckInNode(ray, node, temp_intersectTriangleIdx, temp_p1, temp_p2, temp_p3, temp_intersection)) {
-                float dist = length(temp_intersection.position - ray.origin);
-                minDist = dist;
-                triangleIdx = temp_intersectTriangleIdx;
-                p1 = temp_p1;
-                p2 = temp_p2;
-                p3 = temp_p3;
-                intersection = temp_intersection;
-                break;
+            float t = 10.0;
+            if (intersectionCheckInNode(ray, node, temp_intersectTriangleIdx, temp_p1, temp_p2, temp_p3, temp_intersection, t)) {
+                if(t > 0.0 && t < 1.0) {
+                    float dist = length(temp_intersection.position - ray.origin);
+                    minDist = dist;
+                    triangleIdx = temp_intersectTriangleIdx;
+                    p1 = temp_p1;
+                    p2 = temp_p2;
+                    p3 = temp_p3;
+                    intersection = temp_intersection;
+                    return true;
+                }
             }
             
         } else {
@@ -260,11 +267,12 @@ bool intersectionCheckByBVH(in Ray ray, out int triangleIdx, out vec3 p1, out ve
 
     
 
-    if (minDist < FLT_MAX) {
-        return true;
-    } else {
-        return false;
-    }
+    // if (minDist < FLT_MAX) {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
+    return false;
 
 }
 
@@ -309,29 +317,31 @@ bool isHit(in vec3 raydir, in vec3 rayorigin, out float t) {
     vec3 p1 = vec3(0.0);
     vec3 p2 = vec3(0.0);
 
-    for(int i = 0; i < u_TriangleCount; i++) {
-        getTrianglePosition(i, p0, p1, p2);
-        vec3 normal = getTriangleNormal(i);
-        if(isIntersectWithTriangle(raydir, rayorigin, p0, p1, p2, normal, t)) {
-            if(t < 1.0 && t > 0.0) {
-                return true;
-            }
-        }
-    }
-    //Ray ray;
-    // ray.origin = rayorigin;
-    // ray.direction = raydir;
-    // Intersection intersection;
-    // vec3 p0, p1, p2;
-    // int id;
-    // if (intersectionCheckByBVH(ray, id, p0, p1, p2, intersection))
-    // {
-    //     return true;
-    // } else {
-    //     return false;
+    // for(int i = 0; i < u_TriangleCount; i++) {
+    //     getTrianglePosition(i, p0, p1, p2);
+    //     vec3 normal = getTriangleNormal(i);
+    //     if(isIntersectWithTriangle(raydir, rayorigin, p0, p1, p2, normal, t)) {
+    //         if(t < 1.0 && t > 0.0) {
+    //             return true;
+    //         }
+    //     }
     // }
+    // return false;
 
-    return false;
+    Ray ray;
+    ray.origin = rayorigin;
+    ray.direction = raydir;
+    Intersection intersection;
+    //vec3 p0, p1, p2;
+    int id;
+    if (intersectionCheckByBVH(ray, id, p0, p1, p2, intersection))
+    {
+        return true;
+    } else {
+        return false;
+    }
+
+    
 
 }
 
@@ -339,6 +349,7 @@ float shadowCoef(in vec3 origin, in vec3 lightcenter, in int samplehalfside) {
     float totalsample = pow(float(samplehalfside) + 1.0, 2.0);
     float accum = 0.0;
     float t;
+
 
     for(int i = -samplehalfside; i <= samplehalfside; i++) {
         for(int j = -samplehalfside; j <= samplehalfside; j++) {
@@ -369,7 +380,7 @@ void main()
     vec4 col = texture(u_Albedo, pixel);
 
     float coef = shadowCoef(rayorigin, dynamiclightpos, 3);
-    out_Col = vec4(col.xyz * clamp(coef * 0.15 + 0.85, 0.0, 1.0), 1.0);
+    out_Col = vec4(col.xyz * clamp(coef * 0.2 + 0.8, 0.0, 1.0), 1.0);
     
     // out_Col = texture(u_Albedo, fs_UV);
 

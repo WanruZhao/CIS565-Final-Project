@@ -1,6 +1,6 @@
 import { Primitive, AABB } from './scene';
 
-const MAX_PRIMITIVES_IN_NODE = 32;
+const MAX_PRIMITIVES_IN_NODE = 16;
 const MIN_AABB_LENGTH = 0.001;
 
 
@@ -97,7 +97,7 @@ export function traverseKDTree(root: KDTreeNode): KDTreeNode[] {
         return node1.id - node2.id;
     });
 
-    console.log('nodeList', nodeList);
+    // console.log('nodeList', nodeList);
 
     return nodeList;
 }

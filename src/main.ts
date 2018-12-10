@@ -157,6 +157,16 @@ function loadScene() {
   scene.addSceneElement(mesh, textureSet);
 
   switch(controls.model) {
+    case 'diamond':
+        // load diamond mesh & textures
+      objString = loadOBJText('resources/obj/diamond.obj');
+      material = new Material(0.3, 0.0, 0.7, 0.0);  
+      baseColor = vec4.fromValues(1.0, 1.0, 1.0, 1.0);    
+      mesh = new Mesh(objString, material, baseColor);
+      mesh.create();
+      textureSet = null;
+      scene.addSceneElement(mesh, textureSet);
+    break;
     case 'diamonds':
         // load diamond mesh & textures
       objString = loadOBJText('resources/obj/diamond.obj');
@@ -230,7 +240,7 @@ function loadScene() {
       mesh = new Mesh(objString, material, baseColor);
       mesh.create();
       textureSet = null;
-      scene.addSceneElement(mesh, textureSet);
+      // scene.addSceneElement(mesh, textureSet);
 
       objString = loadOBJText('resources/obj/emerald1.obj');
       material = new Material(0.2, 0.5, 0.3, 0.0);  
@@ -314,7 +324,7 @@ function loadScene() {
   scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
   scene.getCorrectOder();
   scene.buildBVHTextures();
-  console.log(scene.correctOrder);
+  // console.log(scene.correctOrder);
 
 
   scene.buildSceneInfoTextures();
@@ -343,7 +353,7 @@ function setupGUI() {
     gui.add(controls, 'music').onChange(toggleMusic);
     
     // models
-    gui.add(controls, 'model', ['diamonds', 'cubes', 'dragon', 'emeralds']).onChange(loadScene);
+    gui.add(controls, 'model', ['diamond', 'diamonds', 'cubes', 'dragon', 'emeralds']).onChange(loadScene);
 
     // background
     function setBackground() {
