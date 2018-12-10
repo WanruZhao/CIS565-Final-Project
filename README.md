@@ -1,5 +1,8 @@
 GPU Rasterized And Ray Traced Real Time Rendering Using WebGL
 ======================
+<p align="middle">
+  <img src="images/cover2.png"/>
+</p>
 
 **University of Pennsylvania, CIS 565: GPU Programming and Architecture, Final Project**
 
@@ -37,7 +40,6 @@ A list of features implemented in this project is as follows:
 
 <p align="middle">
   <img src="images/cover1.png"/>
-  <img src="images/cover2.png"/>
   <img src="images/cover3.png"/>
 </p>
 
