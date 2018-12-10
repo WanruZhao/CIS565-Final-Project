@@ -73,7 +73,8 @@ struct TreeNode{
     int id;
     vec3 AABB_min;
     vec3 AABB_max;
-    int triangleIDs[8];
+    int startIdx;
+    int endIdx
 };
 
 vec2 interpolateUV(in vec3 p1, in vec3 p2, in vec3 p3, 
@@ -175,13 +176,11 @@ TreeNode getTreeNode(int nodeIdX) {
     float v1 = (float(row) + 1.5) / float(u_BVHTexHeight);
     float v2 = (float(row) + 2.5) / float(u_BVHTexHeight);
     float v3 = (float(row) + 3.5) / float(u_BVHTexHeight);
-    float v4 = (float(row) + 4.5) / float(u_BVHTexHeight);
     
     vec4 e0 = texture(u_BVH, vec2(u, v0));
     vec4 e1 = texture(u_BVH, vec2(u, v1));
     vec4 e2 = texture(u_BVH, vec2(u, v2));
     vec4 e3 = texture(u_BVH, vec2(u, v3));
-    vec4 e4 = texture(u_BVH, vec2(u, v4));
 
     TreeNode node;
     node.isLeaf = int(e0[0]);
@@ -192,14 +191,8 @@ TreeNode getTreeNode(int nodeIdX) {
     node.AABB_min = e1.xyz;
     node.AABB_max = e2.xyz;
 
-    node.triangleIDs[0] = int(e3[0]);
-    node.triangleIDs[1] = int(e3[1]);
-    node.triangleIDs[2] = int(e3[2]);
-    node.triangleIDs[3] = int(e3[3]);
-    node.triangleIDs[4] = int(e4[0]);
-    node.triangleIDs[5] = int(e4[1]);
-    node.triangleIDs[6] = int(e4[2]);
-    node.triangleIDs[7] = int(e4[3]);
+    node.startIdx = int(e3[0]);
+    node.endIdx = int(e3[1]);
 
     return node;
 }
@@ -272,11 +265,8 @@ bool intersectionCheckInNode(in Ray ray, in TreeNode node, out int triangleIdx, 
 
     float minDist = FLT_MAX;
 
-    for(int i = 0; i < node.triangleIDs.length(); i++) {
+    for(int i = node.startIdx; i <= node.endIdx; i++) {
         int currTriangleIdx = node.triangleIDs[i];
-        if (currTriangleIdx < 0) {
-            break;
-        }
         getTrianglePosition(currTriangleIdx, temp_p1, temp_p2, temp_p3);
         vec3 intersectionPos = intersection.position;
         if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionPos)) {

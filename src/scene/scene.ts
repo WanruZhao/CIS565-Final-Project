@@ -144,6 +144,7 @@ export class Scene {
     kdTreeRoot: KDTreeNode
     kdTreeNodeList: KDTreeNode[]
     nodeCount: number
+    correctOrder: number[]
     
 
 
@@ -156,6 +157,7 @@ export class Scene {
         this.triangleCount = 0;
         this.kdTreeRoot = null;
         this.kdTreeNodeList = null;
+        this.correctOrder = [];
     }
 
     addSceneElement(mesh: Mesh, textureSet: Map<string, Texture>) {
@@ -173,6 +175,17 @@ export class Scene {
 
     addEnvironmentTexture(env: Texture) {
         this.environment = env;
+    }
+
+    getCorrectOder() {
+        for (let i = 0; i < this.kdTreeNodeList.length; ++i) {
+            let node = this.kdTreeNodeList[i];
+            if (!node.left || !node.right) {  // is leaf
+                node.primitives.forEach(primitive => {
+                    this.correctOrder.push(primitive.id);
+                })
+            }
+        }
     }
 
     buildSceneInfoTextures() {
@@ -254,6 +267,7 @@ export class Scene {
           }
         }
 
+        let triangleCount = 0;
 
         for (let i = 0; i < this.nodeCount; ++i) {
             let node = this.kdTreeNodeList[i];
@@ -281,8 +295,6 @@ export class Scene {
             this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 0, 1)] = leftIdx;
             this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 0, 2)] = rightIdx;
             this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 0, 3)] = nodeId;
-
-            // debugger
             
 
             // 1st element: AABB min
@@ -301,16 +313,9 @@ export class Scene {
             
             // 3rd element: triangleIDs part1
             if (isLeaf) {
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 3, 0)] = node.primitives[0] ? node.primitives[0].id : -1;
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 3, 1)] = node.primitives[1] ? node.primitives[1].id : -1;
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 3, 2)] = node.primitives[2] ? node.primitives[2].id : -1;
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 3, 3)] = node.primitives[3] ? node.primitives[3].id : -1;
-    
-                // 4th element: triangleIDs part2
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 4, 0)] = node.primitives[4] ? node.primitives[4].id : -1;
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 4, 1)] = node.primitives[5] ? node.primitives[5].id : -1;
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 4, 2)] = node.primitives[6] ? node.primitives[6].id : -1;
-                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 4, 3)] = node.primitives[7] ? node.primitives[7].id : -1;
+                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 3, 0)] = triangleCount;  // start idx
+                this.BVHTextures[textureIdx]._buffer[this.BVHTextures[textureIdx].bufferIndex(localNodeIdx, 3, 1)] = triangleCount + node.primitives.length - 1; // end idx
+                triangleCount += node.primitives.length;
             }
 
         }
@@ -319,7 +324,7 @@ export class Scene {
             this.BVHTextures[i].update();
         }
 
-        console.log(this.BVHTextures[0]._buffer);
+        // debugger
         
     }
 

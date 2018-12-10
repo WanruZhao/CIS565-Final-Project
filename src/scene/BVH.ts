@@ -96,4 +96,3 @@ export function traverseKDTree(root: KDTreeNode): KDTreeNode[] {
     return nodeList;
 }
 
-

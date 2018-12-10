@@ -132,7 +132,7 @@ export class TextureBuffer
 };
 
 export class BVHTextureBuffer {
-	static _pixelPerNode: number = 5;	
+	static _pixelPerNode: number = 4;	
 	
 	_texture: WebGLTexture;
 	_buffer: Float32Array;
