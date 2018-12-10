@@ -62,7 +62,6 @@ export class AABB {
 
 }
 
-
 export class Material {
     specular: number
     diffuse: number
@@ -85,8 +84,6 @@ export class Primitive {
     points: Array<vec4>
     id: number
     aabb: AABB
-    meshid: number
-    meshlocalid: number
 
     constructor(p1: vec4, p2: vec4, p3:  vec4, id: number) {
         this.points = new Array<vec4>();
@@ -169,8 +166,6 @@ export class Scene {
         let count = this.primitives.length;
         mesh.primitives.forEach(primitive => {
             primitive.id = count++;
-            primitive.meshid = this.meshes.length - 1;
-            primitive.meshlocalid = primitive.id - this.triangleCount;
             this.primitives.push(primitive);
         });
 
@@ -192,6 +187,17 @@ export class Scene {
         }
     }
 
+    getMeshId(id: number) {
+        let count = 0;
+        for(let i = 0; i < this.meshes.length; i++) {
+            if(id >= count && id < count + this.meshes[i].count / 3) {
+                return [i, id - count];
+            }
+            count += this.meshes[i].count / 3;
+        }
+        return [null, null];
+    }
+
     buildSceneInfoTextures() {
         let maxTriangleCountPerTexture = maxTextureSize * Math.floor(maxTextureSize / 11);
         let sceneTexCount = Math.ceil(this.triangleCount / maxTriangleCountPerTexture);
@@ -205,10 +211,12 @@ export class Scene {
           }
         }
 
+
         for(let order = 0; order < this.correctOrder.length; order++) {
             let primitiveIdx = this.correctOrder[order];
-            let i = this.primitives[primitiveIdx].meshid;
-            let j = this.primitives[primitiveIdx].meshlocalid;
+
+            let i = this.getMeshId(primitiveIdx)[0];
+            let j = this.getMeshId(primitiveIdx)[1];
 
             let vertexIdx = [this.meshes[i].indices[j * 3], this.meshes[i].indices[j * 3 + 1], this.meshes[i].indices[j * 3 + 2]];
             let textureIdx = Math.floor(order / maxTriangleCountPerTexture);

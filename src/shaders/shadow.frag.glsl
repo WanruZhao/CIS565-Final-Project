@@ -329,8 +329,21 @@ bool isHit(in vec3 raydir, in vec3 rayorigin, out float t) {
             }
         }
     }
+    //Ray ray;
+    // ray.origin = rayorigin;
+    // ray.direction = raydir;
+    // Intersection intersection;
+    // vec3 p0, p1, p2;
+    // int id;
+    // if (intersectionCheckByBVH(ray, id, p0, p1, p2, intersection))
+    // {
+    //     return true;
+    // } else {
+    //     return false;
+    // }
 
     return false;
+
 }
 
 float shadowCoef(in vec3 origin, in vec3 lightcenter, in int samplehalfside) {
