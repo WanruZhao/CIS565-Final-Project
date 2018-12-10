@@ -171,11 +171,8 @@ bool intersectionCheckInNode(in Ray ray, in TreeNode node, out int triangleIdx, 
 
     float minDist = FLT_MAX;
 
-    for(int i = 0; i < node.triangleIDs.length(); i++) {
-        int currTriangleIdx = node.triangleIDs[i];
-        if (currTriangleIdx < 0) {
-            break;
-        }
+    for(int i = node.startIdx; i <= node.endIdx; i++) {
+        int currTriangleIdx = i;
         getTrianglePosition(currTriangleIdx, temp_p1, temp_p2, temp_p3);
         vec3 intersectionPos = intersection.position;
         if(rayIntersectsTriangle(ray.origin, ray.direction, temp_p1, temp_p2, temp_p3, intersectionPos)) {
