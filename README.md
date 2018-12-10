@@ -50,17 +50,23 @@ A list of features implemented in this project is as follows:
 |------|------|
 | ![](images/position.png) | ![](images/normal.png) |
 
+We stored the rasterized data such as position, normal, albedo color, and material into gbuffers, and lauch the rays from the first intersection in the world based on the data in gbuffer.
+
 **Ray traced reflection pass**
 
 | Ray depth = 2 | Ray Depth = 4 |
 |------|------|
 | ![](images/reflect_d_2.png) | ![](images/reflect_d_4.png) |
 
+We raytraced the specular reflection and above diamond has material of 0.5 diffuse/ 0.5 specular. With different ray depth, we can notice the difference of the reflection of the diamond on the floor.
+
 **Ray traced refraction pass**
 
 | Ray depth = 2 | Ray Depth = 5 | Ray depth = 10 | Ray Depth = 20 |
 |------|------|------|------|
 | ![](images/refract_d_2.png) | ![](images/refract_d_5.png) | ![](images/refract_d_10.png) | ![](images/refract_d_20.png) |
+
+We used Snell's law to calculate the direction of refract ray, and added internal reflection inside the model to create more diamond like look.
 
 
 **Combine separate Passes**
@@ -69,20 +75,21 @@ A list of features implemented in this project is as follows:
 |------|------|------|------|
 | ![](images/deferredPass.png) | ![](images/reflectPass.png) | ![](images/refractPass.png) | ![](images/combined.png) |
 
+The reflection, refraction and direct lighting are done in seperate passes. We blend the output of thoses passes based on the material of the object.
+
 **BVH and KDTree**
 ![](images/BVH.png)
+
+Since our models are all meshes, performance drops heavily when using high poly meshes. We used BVH(Bounding box hierachy) and KD Tree to accelerate the intersection checking between ray and triangles. The KD tree is constructed and flattened on CPU, encoded in WebGL textures, and traversed on GPU. Above image is the BVH texture used in shader.
 
 ## Performance Analysis ##
  ![](images/performance.png) 
 
-### Credits
+We can observe about more than two folds of performance improvement with BVH. We didn't observe much performance difference when we adjust the maximum number of primitives stored in each leaf node, this is probably because even though allowing more triangles in leaf nodes results in shorter tree height and shorter traverse time, more time will be consumed on checking more triangles in each leaf node. So there is a tradeoff.
 
-
-### Milestone 1 - 2018.11.19
-- WebGL framework
-- Basic deferred shading
-- Raytraced shadow (hard)
-- Raytraced direct lighting
+### Credits and Reference
+* SHINY PIXELS AND BEYOND: REAL-TIME RAYTRACING AT SEED: https://www.ea.com/seed/news/seed-gdc-2018-presentation-slides-shiny-pixels
+* RigidGems: http://www.rigidgems.sakura.ne.jp/index_en.html
 
 
 
