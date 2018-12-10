@@ -16,6 +16,7 @@ uniform int u_BVHTexWidth; // extend to multiple size
 uniform int u_BVHTexHeight; // extend to multiple size
 uniform int u_NodeCount;
 
+
 // currently one light
 uniform vec4 u_LightPos;
 uniform float u_Time;
@@ -53,7 +54,8 @@ struct TreeNode{
     int id;
     vec3 AABB_min;
     vec3 AABB_max;
-    int triangleIDs[8];
+    int startIdx;
+    int endIdx;
 };
 
 //=============================================================================================================
@@ -69,13 +71,11 @@ TreeNode getTreeNode(int nodeIdX) {
     float v1 = (float(row) + 1.5) / float(u_BVHTexHeight);
     float v2 = (float(row) + 2.5) / float(u_BVHTexHeight);
     float v3 = (float(row) + 3.5) / float(u_BVHTexHeight);
-    float v4 = (float(row) + 4.5) / float(u_BVHTexHeight);
     
     vec4 e0 = texture(u_BVH, vec2(u, v0));
     vec4 e1 = texture(u_BVH, vec2(u, v1));
     vec4 e2 = texture(u_BVH, vec2(u, v2));
     vec4 e3 = texture(u_BVH, vec2(u, v3));
-    vec4 e4 = texture(u_BVH, vec2(u, v4));
 
     TreeNode node;
     node.isLeaf = int(e0[0]);
@@ -86,14 +86,8 @@ TreeNode getTreeNode(int nodeIdX) {
     node.AABB_min = e1.xyz;
     node.AABB_max = e2.xyz;
 
-    node.triangleIDs[0] = int(e3[0]);
-    node.triangleIDs[1] = int(e3[1]);
-    node.triangleIDs[2] = int(e3[2]);
-    node.triangleIDs[3] = int(e3[3]);
-    node.triangleIDs[4] = int(e4[0]);
-    node.triangleIDs[5] = int(e4[1]);
-    node.triangleIDs[6] = int(e4[2]);
-    node.triangleIDs[7] = int(e4[3]);
+    node.startIdx = int(e3[0]);
+    node.endIdx = int(e3[1]);
 
     return node;
 }
