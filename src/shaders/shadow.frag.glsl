@@ -352,12 +352,6 @@ float shadowCoef(in vec3 origin, in vec3 lightcenter, in int samplehalfside) {
     return accum / totalsample;
 }
 
-// float clamp(float x, float a, float b) {
-//     if(x > b) return b;
-//     else if(x < a) return a;
-//     else return x;
-// }
-
 void main()
 {
     // calculate launched ray from first hit point to light
