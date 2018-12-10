@@ -46,7 +46,7 @@ const controls = {
       rayDepth: 2
     },
     refraction: {
-      on: false,
+      on: true,
       dispersion: false,
       rayDepth: 10
     },
@@ -124,6 +124,10 @@ function loadScene() {
     break;
     case 'Panorama':
       environment = new Texture('resources/textures/Panorama.jpg');
+      scene.addEnvironmentTexture(environment);
+    break;
+    case 'harbor':
+      environment = new Texture('resources/textures/harbor.jpg');
       scene.addEnvironmentTexture(environment);
     break;
     default:
@@ -245,12 +249,8 @@ function loadScene() {
 
   scene.buildSceneInfoTextures();
 
-  console.log(scene);
-
   // build KDTree texture
   scene.kdTreeRoot = buildKDTree(scene.primitives, 0, 8);
-
-  console.log(scene.kdTreeRoot);
 
   scene.kdTreeNodeList = traverseKDTree(scene.kdTreeRoot);
   scene.buildBVHTextures();
@@ -288,11 +288,14 @@ function setupGUI() {
         case 'Panorama':
           scene.addEnvironmentTexture(new Texture('resources/textures/Panorama.jpg'));
         break;
+        case 'harbor':
+          scene.addEnvironmentTexture(new Texture('resources/textures/harbor.jpg'));
+        break;
         default:
       }
 
     }
-    gui.add(controls, 'background', ['church', 'Panorama']).onChange(setBackground);
+    gui.add(controls, 'background', ['church', 'Panorama', 'harbor']).onChange(setBackground);
 
 
     

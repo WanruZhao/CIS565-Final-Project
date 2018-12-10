@@ -319,7 +319,7 @@ export class Scene {
             this.BVHTextures[i].update();
         }
 
-        console.log(this.BVHTextures[0]._buffer);
+        // console.log(this.BVHTextures[0]._buffer);
         
     }
 
