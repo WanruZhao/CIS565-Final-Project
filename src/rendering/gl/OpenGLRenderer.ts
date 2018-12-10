@@ -1,7 +1,7 @@
 import {mat4, vec4, vec3, vec2} from 'gl-matrix';
 import Drawable from './Drawable';
 import Camera from '../../Camera';
-import {gl} from '../../globals';
+import { gl, readTextFile } from '../../globals';
 import ShaderProgram, {Shader} from './ShaderProgram';
 import Square from '../../geometry/Square';
 import Icosphere from '../../geometry/Icosphere';
@@ -21,8 +21,31 @@ import Mesh from '../../geometry/Mesh';
 import DOFPass from './passes/DOFPass';
 import GlowPass from './passes/GlowPass';
 import SSAAPass from './passes/SSAAPass';
+import { stat } from 'fs';
 
 class OpenGLRenderer {
+  renderState:{  // temp values
+    reflection: {
+      on: true,
+      rayDepth: 2
+    },
+    refraction: {
+      on: true,
+      rayDepth: 10
+    },
+    ssaa: {
+      on: false,
+    },
+    glow: {
+      on: false,
+    },
+    DOF: {
+      on: false,
+    },
+    useBVH: true,
+    
+  
+  }
 
   lightPos: vec4 = vec4.fromValues(0.0, 10.0, 0.0, 1.0); // currently one light
 
@@ -244,6 +267,9 @@ class OpenGLRenderer {
     }
   }
 
+  setRenderState(state: {}) {
+    this.renderState = Object.assign({}, this.renderState, state);
+  }
 
   setClearColor(r: number, g: number, b: number, a: number) {
     gl.clearColor(r, g, b, a);
@@ -569,6 +595,10 @@ class OpenGLRenderer {
                   nodeCount: number,                  
                   textureSet: Array<Map<string, Texture>>, 
                   env: Texture) {
+
+    if (!this.renderState.reflection.on) {
+      return;
+    }
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.reflectionBuffer);
     
@@ -602,7 +632,14 @@ class OpenGLRenderer {
 
     this.reflectionPass.setViewMatrix(camera.viewMatrix);
 
-    this.reflectionPass.drawElement(camera, textures, 2, triangleCount, nodeCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height, BVHTextures[0]._width, BVHTextures[0]._height);
+    this.reflectionPass.drawElement(camera, 
+                                    textures, 2, 
+                                    triangleCount, nodeCount, 
+                                    this.lightPos, this.canvas, 
+                                    sceneInfo[0]._width, sceneInfo[0]._height, 
+                                    BVHTextures[0]._width, BVHTextures[0]._height, 
+                                    this.renderState.reflection.rayDepth,
+                                    this.renderState.useBVH);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
@@ -615,6 +652,9 @@ class OpenGLRenderer {
                   nodeCount: number,                  
                   textureSet: Array<Map<string, Texture>>, 
                   env: Texture) {
+    if (!this.renderState.refraction.on) {
+      return;
+    }
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.refractionBuffer);
     
@@ -633,8 +673,8 @@ class OpenGLRenderer {
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[1]);
     textures.push(this.gbTargets[0]);
-    // textures.push(this.originalTargetFromGBuffer);
-    textures.push(this.shadowTarget);
+    textures.push(this.originalTargetFromGBuffer);
+    // textures.push(this.shadowTarget);
     textures.push(this.gbTargets[3]);
     
     for(let i = 0; i < sceneInfo.length; i++) {
@@ -647,22 +687,44 @@ class OpenGLRenderer {
 
     this.refractionPass.setViewMatrix(camera.viewMatrix);
 
-    this.refractionPass.drawElement(camera, textures, 2, triangleCount, nodeCount, this.lightPos, this.canvas, sceneInfo[0]._width, sceneInfo[0]._height,  BVHTextures[0]._width, BVHTextures[0]._height);
+    this.refractionPass.drawElement(camera, 
+                                    textures, 2, 
+                                    triangleCount, nodeCount, 
+                                    this.lightPos, this.canvas, 
+                                    sceneInfo[0]._width, sceneInfo[0]._height,  
+                                    BVHTextures[0]._width, BVHTextures[0]._height,
+                                    this.renderState.refraction.rayDepth,
+                                    this.renderState.useBVH);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
   }
 
   raytraceComposeStage() {
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+    if (!this.renderState.ssaa.on && !this.renderState.glow.on && !this.renderState.DOF.on) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    } else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.raytraceComposeBuffer);
+    }
 
     let textures: WebGLTexture[] = [];
     textures.push(this.gbTargets[3]);
-    textures.push(this.shadowTarget); 
-    // textures.push(this.originalTargetFromGBuffer);
-    textures.push(this.reflectionTarget);
-    textures.push(this.refractionTarget);
+    // textures.push(this.shadowTarget); 
+
+    textures.push(this.originalTargetFromGBuffer);    
+    if (this.renderState.reflection.on && this.renderState.refraction.on) {
+      textures.push(this.reflectionTarget);
+      textures.push(this.refractionTarget);
+    } else if (this.renderState.reflection.on) {
+      textures.push(this.reflectionTarget);
+      textures.push(this.originalTargetFromGBuffer);
+    } else if (this.renderState.refraction.on) {
+      textures.push(this.originalTargetFromGBuffer);
+      textures.push(this.refractionTarget);
+    } else {
+      textures.push(this.originalTargetFromGBuffer);
+      textures.push(this.originalTargetFromGBuffer);
+    }
 
     this.raytraceComposePass.drawElement(textures, this.canvas);
 
@@ -672,8 +734,15 @@ class OpenGLRenderer {
 
   ssaa()
   {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, this.ssaaBuffer);
+    if (this.renderState.ssaa.on) {
+      if (!this.renderState.glow.on && !this.renderState.DOF.on) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      } else {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.ssaaBuffer);
+      }
+    } else {
+      return;
+    }
 
     let textures: WebGLTexture[] = [];
     textures.push(this.raytraceComposeTarget);
@@ -685,22 +754,38 @@ class OpenGLRenderer {
 
   glow()
   {
+    if (!this.renderState.glow.on) {
+      return;
+    }
+
     // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowSourceBuffer);
 
     let textures : WebGLTexture[];
     textures = [];
-    // textures.push(this.raytraceComposeTarget);
-    textures.push(this.ssaaTarget);
+
+    if (this.renderState.ssaa.on) {
+      textures.push(this.ssaaTarget);
+    } else {
+      textures.push(this.raytraceComposeTarget);
+    }
+
     this.glowSourcePass.drawElement(this.canvas, textures);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowBuffer);
+    if (!this.renderState.DOF.on) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    } else {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.glowBuffer);
+    }
 
     textures = [];
-    textures.push(this.raytraceComposeTarget);
+    if (this.renderState.ssaa.on) {
+      textures.push(this.ssaaTarget);
+    } else {
+      textures.push(this.raytraceComposeTarget);
+    }
     textures.push(this.glowSourceTarget);
     this.glowPass.drawElement(this.canvas, textures);
 
@@ -709,13 +794,20 @@ class OpenGLRenderer {
   }
 
   dof() {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    if (this.renderState.DOF.on) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    } else {
+      return;
+    }
     // gl.bindFramebuffer(gl.FRAMEBUFFER, this.dofBuffer);
 
     let textures : WebGLTexture[];
     textures = [];
-    textures.push(this.glowTarget);
-    // textures.push(this.raytraceComposeTarget);
+    if (this.renderState.glow.on) {
+      textures.push(this.glowTarget);
+    } else {
+      textures.push(this.raytraceComposeTarget);
+    }
     textures.push(this.gbTargets[0]);
     this.dofPass.drawElement(this.canvas, textures);
 

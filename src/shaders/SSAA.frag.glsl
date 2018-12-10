@@ -106,9 +106,11 @@ void main()
 {
     vec2 uv = gl_FragCoord.xy / vec2(u_Width, u_Height);
     vec2 fragCoord = uv * vec2(u_Width, u_Height);
+
 #ifdef FXAA
         out_Col = vec4(fxaaPixelShader(fragCoord), 1.0);
 #else
         out_Col = texture(u_frame, uv);
 #endif
+
 }
